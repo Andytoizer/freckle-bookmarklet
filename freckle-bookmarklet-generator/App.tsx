@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Generator from './components/Generator';
 import Walkthrough from './components/Walkthrough';
+import { buildBookmarklet } from './bookmarklet';
 
 const App: React.FC = () => {
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -37,7 +38,7 @@ const App: React.FC = () => {
   };
 
   const handleCopyAgain = () => {
-    const code = `javascript:(function(){var w=window.open('https://yellow-truth-5279.andy-815.workers.dev?url=%27+encodeURIComponent(window.location.href)+%27&webhook=%27+encodeURIComponent(%27${webhookUrl.trim()}%27),%27_blank%27,%27width=400,height=200%27);setTimeout(function(){w.close();},1000);})();`;
+    const code = buildBookmarklet(webhookUrl);
     navigator.clipboard.writeText(code);
   };
 

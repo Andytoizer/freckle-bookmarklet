@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
+import { buildBookmarklet } from '../bookmarklet';
 
 interface GeneratorProps {
   onGenerated: (url: string) => void;
@@ -15,7 +16,7 @@ const Generator: React.FC<GeneratorProps> = ({ onGenerated, initialValue = '' })
     if (!webhookUrl) return;
     setIsCopying(true);
     
-    const code = `javascript:(function(){var w=window.open('https://yellow-truth-5279.andy-815.workers.dev?url=%27+encodeURIComponent(window.location.href)+%27&webhook=%27+encodeURIComponent(%27${webhookUrl.trim()}%27),%27_blank%27,%27width=400,height=200%27);setTimeout(function(){w.close();},1000);})();`;
+    const code = buildBookmarklet(webhookUrl);
     
     navigator.clipboard.writeText(code).then(() => {
       onGenerated(webhookUrl);
