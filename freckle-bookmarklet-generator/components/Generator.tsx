@@ -1,6 +1,5 @@
 
 import React, { useState, useCallback } from 'react';
-import { buildBookmarklet } from '../bookmarklet';
 
 interface GeneratorProps {
   onGenerated: (url: string) => void;
@@ -9,18 +8,11 @@ interface GeneratorProps {
 
 const Generator: React.FC<GeneratorProps> = ({ onGenerated, initialValue = '' }) => {
   const [webhookUrl, setWebhookUrl] = useState(initialValue);
-  const [isCopying, setIsCopying] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  const handleCopy = useCallback(() => {
+  const handleCreate = useCallback(() => {
     if (!webhookUrl) return;
-    setIsCopying(true);
-    
-    const code = buildBookmarklet(webhookUrl);
-    
-    navigator.clipboard.writeText(code).then(() => {
-      onGenerated(webhookUrl);
-    });
+    onGenerated(webhookUrl.trim());
   }, [webhookUrl, onGenerated]);
 
   return (
@@ -38,15 +30,15 @@ const Generator: React.FC<GeneratorProps> = ({ onGenerated, initialValue = '' })
         </div>
 
         <button
-          onClick={handleCopy}
-          disabled={!webhookUrl || isCopying}
+          onClick={handleCreate}
+          disabled={!webhookUrl}
           className={`w-full py-6 rounded-[1.5rem] font-extrabold text-xl transition-all duration-300 transform active:scale-[0.98] shadow-2xl ${
             webhookUrl 
               ? 'bg-[#7c4dff] text-white hover:bg-[#6a3de8] hover:-translate-y-0.5 shadow-[#7c4dff]/30' 
               : 'bg-gray-50 text-gray-300 cursor-not-allowed shadow-none'
           }`}
         >
-          {isCopying ? 'Generating...' : 'Copy Bookmarklet Code'}
+          Create My Bookmarklet
         </button>
 
         <div className="text-center pt-8">
