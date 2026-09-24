@@ -12,7 +12,7 @@ const App: React.FC = () => {
     <>
       <Nav />
       <main>
-        <Hero onStart={a => builder.current?.start(a)} onSkip={() => builder.current?.skipToPaste()} />
+        <Hero onStart={() => builder.current?.start()} onSkip={() => builder.current?.skipToPaste()} />
         <Builder ref={builder} />
         <Notes />
       </main>

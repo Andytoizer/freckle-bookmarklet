@@ -1,9 +1,8 @@
 import React from 'react';
 import Icon from '../ds/Icon';
-import { AGENTS, type Agent } from '../prompts';
 
 interface HeroProps {
-  onStart: (agent: Agent) => void;
+  onStart: () => void;
   onSkip: () => void;
 }
 
@@ -22,6 +21,14 @@ const Hero: React.FC<HeroProps> = ({ onStart, onSkip }) => (
       <p className="lede">
         Click it in your browser bar and the page you're on becomes a row in Freckle, where a workflow you built with your coding agent takes it from there.
       </p>
+      <div className="hero-actions">
+        <button type="button" className="btn btn-primary" onClick={onStart}>Set it up <Icon name="arrow-up-right" size={12} /></button>
+        <button type="button" className="linkbtn" onClick={onSkip}>Already have a webhook URL?</button>
+      </div>
+    </div>
+
+    <div className="uses-card">
+      <span className="eyebrow mono">what you can send</span>
       <ul className="uses">
         {USES.map(u => (
           <li key={u.text}>
@@ -32,27 +39,7 @@ const Hero: React.FC<HeroProps> = ({ onStart, onSkip }) => (
           </li>
         ))}
       </ul>
-    </div>
-
-    <div className="start">
-      <div className="start-head">
-        <span className="eyebrow mono">start here</span>
-        <h2 className="h h3">Build the workflow with your coding agent</h2>
-        <p className="step-help">One click copies a setup prompt. Paste it into a new session, and it builds the webhook and hands you the URL.</p>
-      </div>
-      <div className="agents">
-        {(Object.keys(AGENTS) as Agent[]).map(a => (
-          <button key={a} type="button" className="agent" onClick={() => onStart(a)}>
-            <span className={`tile ${a}`}><img src={AGENTS[a].mark} alt="" /></span>
-            <span className="agent-name">{AGENTS[a].name}</span>
-            <span className="agent-sub mono">copy prompt</span>
-          </button>
-        ))}
-      </div>
-      <div className="start-foot">
-        <span className="mono subtle">needs the Freckle CLI · npx freckle login</span>
-        <button type="button" className="linkbtn" onClick={onSkip}>Already have a webhook URL?</button>
-      </div>
+      <span className="mono subtle" style={{ fontSize: 'var(--text-2xs)' }}>one workflow routes them all · add plays in step 3</span>
     </div>
   </section>
 );

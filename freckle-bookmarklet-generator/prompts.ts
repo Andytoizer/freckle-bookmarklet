@@ -3,11 +3,38 @@
 
 export const SITE_URL = 'https://freckle-bookmarklet.vercel.app/';
 
-export type Agent = 'claude-code' | 'codex';
+// The agent is told to hand back this link with the webhook filled in; the page reads
+// the query string on load, validates it and opens step 2.
+export const RETURN_URL = `${SITE_URL}?webhook=<WEBHOOK_URL>`;
 
-export const AGENTS: Record<Agent, { name: string; mark: string }> = {
-  'claude-code': { name: 'Claude Code', mark: '/ds/marks/claude.svg' },
-  codex: { name: 'Codex', mark: '/ds/marks/openai.svg' },
+export type Agent = 'claude-code' | 'codex' | 'cursor';
+
+export interface AgentDef {
+  name: string;
+  mark: string;
+  // Deep link that opens the app with the prompt pre-filled; undefined when the tool has none.
+  link?: (prompt: string) => string;
+  fallback: string;
+}
+
+export const AGENTS: Record<Agent, AgentDef> = {
+  'claude-code': {
+    name: 'Claude Code',
+    mark: '/ds/marks/claude.svg',
+    fallback: 'Prompt copied. Open a terminal, run claude, and paste.',
+  },
+  codex: {
+    name: 'Codex',
+    mark: '/ds/marks/openai.svg',
+    link: p => `codex://new?prompt=${encodeURIComponent(p)}`,
+    fallback: 'Opening Codex with the prompt. If nothing opens, it’s on your clipboard: run codex in a terminal and paste.',
+  },
+  cursor: {
+    name: 'Cursor',
+    mark: '',
+    link: p => `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(p)}`,
+    fallback: 'Opening Cursor with the prompt. If nothing opens, it’s on your clipboard: paste it into Cursor’s agent chat.',
+  },
 };
 
 export const SETUP_PROMPT = `Use Freckle to build a workflow that starts from a webhook.
@@ -20,7 +47,8 @@ Build the minimum:
 
 Don't add enrichment yet. I'll add a branch per type next.
 
-When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and tell me to paste it at ${SITE_URL}`;
+When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
+${RETURN_URL}`;
 
 export interface Play {
   id: string;

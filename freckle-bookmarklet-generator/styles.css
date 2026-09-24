@@ -36,7 +36,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .wordmark img { height: 18px; width: auto; display: block; }
 
 /* Hero */
-.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 48px; align-items: start; padding-top: 56px; padding-bottom: 48px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: start; padding-top: 56px; padding-bottom: 48px; }
 .hero-copy { display: flex; flex-direction: column; gap: 20px; }
 .uses { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
 .uses li { display: grid; grid-template-columns: 16px minmax(0, auto) 12px minmax(0, 1fr); align-items: center; gap: 10px; height: 40px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); white-space: nowrap; }
@@ -44,21 +44,40 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .uses img { width: 16px; height: 16px; display: block; }
 .uses .arrow { color: var(--purple-5); display: inline-flex; }
 
-/* Start card — the one place to begin */
-.start { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
-.start-head { display: flex; flex-direction: column; gap: 6px; }
-.agents { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.agent { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-md); cursor: pointer; text-align: left; transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard); }
+/* Use-case card — the right column of the hero */
+.hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); }
+.uses-card { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 8px; }
+.uses-card .uses { margin: 0; border-top: 0; }
+.uses-card .uses li:last-child { border-bottom: 0; }
+
+/* Agent card — step 1's launcher, mirrors the Freckle app's install panel */
+.agent-card { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 880px; }
+.agent-card .h3 { margin: 0; }
+.agent-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+.agent { display: flex; align-items: center; gap: 10px; height: var(--control-h-xl); padding: 0 12px; background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-md); cursor: pointer; text-align: left; min-width: 0; transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard); }
 .agent:hover { border-color: var(--purple-3); background: var(--purple-0); }
 .agent:active { transform: scale(.97); }
 .agent:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); border-color: var(--border-focus); }
-.tile { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7); }
-.tile img { width: 18px; height: 18px; display: block; }
+.tile { width: 28px; height: 28px; border-radius: var(--radius-sm); display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7); flex-shrink: 0; }
+.tile img { width: 16px; height: 16px; display: block; }
 .tile.claude-code { background: var(--tile-claude); }
 .tile.codex { background: var(--tile-codex); }
-.agent-name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--gray-9); }
-.agent-sub { font-size: var(--text-2xs); color: var(--gray-5); margin-top: -6px; }
-.start-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: var(--text-xs); }
+.tile.cursor { background: var(--tile-neutral); }
+.tile.plain { background: var(--gray-0); border: 1px solid var(--border); box-shadow: none; }
+.agent-name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--gray-9); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-go { color: var(--gray-5); display: inline-flex; }
+.agent-notice { font-size: var(--text-xs); line-height: 16px; color: var(--purple-7); }
+.prompt-dark { position: relative; background: var(--gray-9); border-radius: var(--radius-md); padding: 14px 44px 40px 16px; overflow: hidden; }
+.prompt-dark pre { margin: 0; font-family: var(--font-mono); letter-spacing: var(--tracking-mono); font-size: var(--text-xs); line-height: 18px; color: var(--gray-1); white-space: pre-wrap; word-break: break-word; }
+.prompt-dark:not(.full)::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(to bottom, rgba(31, 32, 32, 0), var(--gray-9) 70%); pointer-events: none; }
+.prompt-copy { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; display: grid; place-items: center; background: none; border: 1px solid var(--gray-7); border-radius: var(--radius-sm); color: var(--gray-3); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.prompt-copy:hover { background: var(--gray-8); color: #fff; }
+.prompt-copy:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); }
+.prompt-toggle { position: absolute; left: 0; right: 0; bottom: 10px; margin: 0 auto; z-index: 1; display: inline-flex; align-items: center; gap: 6px; width: max-content; background: none; border: 0; color: #fff; font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); }
+.prompt-toggle:hover { background: var(--gray-8); }
+.prompt-toggle:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); }
+.prompt-toggle .chev { display: inline-flex; transition: transform var(--duration-fast) var(--ease-standard); }
+.prompt-toggle .chev.up { transform: rotate(180deg); }
 
 /* Steps — one open at a time */
 .section { padding: 40px 0; border-top: 1px solid var(--border); }
@@ -92,7 +111,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .prompt-head { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px 0 12px; border-bottom: 1px solid var(--border); background: var(--surface-sunken); font-size: var(--text-2xs); letter-spacing: .06em; text-transform: uppercase; }
 .prompt-actions { margin-left: auto; display: flex; gap: 6px; }
 .prompt-text, .play-prompt { margin: 0; padding: 12px 14px; font-family: var(--font-mono); letter-spacing: var(--tracking-mono); font-size: var(--text-xs); line-height: 18px; color: var(--gray-8); white-space: pre-wrap; word-break: break-word; }
-.paste { display: flex; flex-direction: column; gap: 8px; max-width: 720px; padding-top: 4px; }
+.paste { display: flex; flex-direction: column; gap: 8px; max-width: 880px; padding-top: 4px; }
 
 /* Input */
 .field { display: flex; gap: 8px; align-items: center; }
@@ -174,7 +193,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
   .uses li { white-space: normal; height: auto; padding: 8px 0; grid-template-columns: 16px minmax(0, 1fr); }
   .uses .arrow { display: none; }
   .uses li > span:last-child { grid-column: 2; white-space: normal; }
-  .start { position: static; }
+  .agent-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .step { grid-template-columns: 40px minmax(0, 1fr); gap: 0 14px; }
   .step-summary { display: none; }
   .drag-grid, .plays, .notes { grid-template-columns: minmax(0, 1fr); }

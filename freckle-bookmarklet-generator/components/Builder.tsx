@@ -14,8 +14,15 @@ const check = (raw: string): Check => {
   return { state: WEBHOOK_RE.test(normalized) ? 'ok' : 'bad', fixed: normalized !== trimmed };
 };
 
+// The agent hands back ?webhook=<url>; read it once and clear it from the address bar.
+const webhookFromUrl = (): string => {
+  const w = new URLSearchParams(window.location.search).get('webhook') || '';
+  if (w) window.history.replaceState(null, '', window.location.pathname);
+  return w;
+};
+
 export interface BuilderHandle {
-  start: (agent: Agent) => void;
+  start: () => void;
   skipToPaste: () => void;
 }
 
@@ -29,6 +36,12 @@ const useCopy = () => {
   };
   return { copied, copy };
 };
+
+const AgentMark: React.FC<{ agent: Agent }> = ({ agent }) => (
+  <span className={`tile ${agent}`}>
+    {AGENTS[agent].mark ? <img src={AGENTS[agent].mark} alt="" /> : <Icon name="cube" size={16} color="var(--gray-9)" />}
+  </span>
+);
 
 // Demo slot for step 2. Drop the recording at public/drag-demo.gif and it replaces the placeholder.
 const DragDemo: React.FC = () => {
@@ -83,8 +96,9 @@ const Step: React.FC<StepProps> = ({ n, status, title, summary, onOpen, children
 );
 
 const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
-  const [raw, setRaw] = useState('');
-  const [agent, setAgent] = useState<Agent | null>(null);
+  const [raw, setRaw] = useState(webhookFromUrl);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [open, setOpen] = useState<1 | 2 | 3>(1);
   const [dragged, setDragged] = useState(false);
   const [nudge, setNudge] = useState(false);
@@ -92,6 +106,7 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
   const sectionRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chipRef = useRef<HTMLAnchorElement>(null);
+  const cameBack = useRef(raw !== '');
 
   const result = useMemo(() => check(raw), [raw]);
   const ready = result.state === 'ok';
@@ -110,21 +125,28 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
 
   const scrollHere = () => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+  // Landed here from the agent's link: go straight to the drag step.
+  useEffect(() => {
+    if (cameBack.current) setTimeout(scrollHere, 300);
+  }, []);
+
+  const focusPaste = () => setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
+
   useImperativeHandle(ref, () => ({
-    start: a => {
-      setAgent(a);
-      copy('setup-' + a, SETUP_PROMPT);
-      setOpen(1);
-      scrollHere();
-    },
-    skipToPaste: () => {
-      setOpen(1);
-      scrollHere();
-      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
-    },
+    start: () => { setOpen(1); scrollHere(); },
+    skipToPaste: () => { setOpen(1); scrollHere(); focusPaste(); },
   }));
 
+  const launch = (agent: Agent) => {
+    const def = AGENTS[agent];
+    copy('setup', SETUP_PROMPT);
+    setNotice(def.fallback);
+    if (def.link) window.location.href = def.link(SETUP_PROMPT);
+  };
+
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
+  const promptLines = SETUP_PROMPT.split('\n');
+  const previewText = showPrompt ? SETUP_PROMPT : promptLines.slice(0, 5).join('\n');
 
   return (
     <section className="section" ref={sectionRef} id="setup">
@@ -137,27 +159,35 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
         <div className="steps">
           <Step n="01" status={open === 1 ? 'open' : ready ? 'done' : 'todo'} title="Get your webhook URL"
                 summary={ready ? short : undefined} onOpen={() => setOpen(1)}>
-            <p className="step-help">
-              {agent
-                ? <>Prompt copied. Paste it into a new <strong>{AGENTS[agent].name}</strong> session in any folder. When it hands you the webhook URL, paste that below.</>
-                : <>Copy this prompt into a new Claude Code or Codex session. It builds the workflow and hands you the webhook URL. Paste that below.</>}
-            </p>
-            <div className="prompt-block">
-              <div className="prompt-head">
-                <span className="mono subtle">setup prompt</span>
-                <span className="prompt-actions">
-                  {(Object.keys(AGENTS) as Agent[]).map(a => (
-                    <button key={a} type="button" className="btn btn-secondary btn-md" onClick={() => { setAgent(a); copy('setup-' + a, SETUP_PROMPT); }}>
-                      <img className="mini-mark" src={AGENTS[a].mark} alt="" />
-                      {copied === 'setup-' + a ? 'Copied' : `Copy for ${AGENTS[a].name}`}
-                    </button>
-                  ))}
-                </span>
+            <div className="agent-card">
+              <h4 className="h h3">Build the workflow with your coding agent</h4>
+              <p className="step-help">Freckle works inside your coding agent. One paste builds the webhook and sends you back here with the URL.</p>
+              <div className="agent-row">
+                {(Object.keys(AGENTS) as Agent[]).map(a => (
+                  <button key={a} type="button" className="agent" onClick={() => launch(a)}>
+                    <AgentMark agent={a} />
+                    <span className="agent-name">{AGENTS[a].name}</span>
+                    <span className="agent-go"><Icon name="arrow-up-right" size={16} /></span>
+                  </button>
+                ))}
+                <button type="button" className="agent" onClick={() => { copy('setup', SETUP_PROMPT); setNotice('Prompt copied. Paste it into any coding agent.'); }}>
+                  <span className="tile plain"><Icon name="copy" size={16} color="var(--gray-9)" /></span>
+                  <span className="agent-name">{copied === 'setup' ? 'Copied' : 'Copy prompt'}</span>
+                </button>
               </div>
-              <pre className="prompt-text">{SETUP_PROMPT}</pre>
+              {notice && <div className="agent-notice mono" aria-live="polite">{notice}</div>}
+              <div className={`prompt-dark ${showPrompt ? 'full' : ''}`}>
+                <pre>{previewText}</pre>
+                <button type="button" className="prompt-copy" title="Copy prompt" onClick={() => { copy('setup', SETUP_PROMPT); }}>
+                  <Icon name={copied === 'setup' ? 'check' : 'copy'} size={16} />
+                </button>
+                <button type="button" className="prompt-toggle" onClick={() => setShowPrompt(s => !s)}>
+                  {showPrompt ? 'Hide the prompt' : 'Show the full prompt'} <span className={`chev ${showPrompt ? 'up' : ''}`}><Icon name="chevron-down" size={16} /></span>
+                </button>
+              </div>
             </div>
             <div className="paste">
-              <label className="step-title sm" htmlFor="webhook">Then paste the webhook URL here</label>
+              <label className="step-title sm" htmlFor="webhook">Then paste the webhook URL it hands back</label>
               <div className="field">
                 <input
                   id="webhook"
@@ -172,7 +202,7 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
                 />
               </div>
               <div className={`status ${result.state}`} aria-live="polite">
-                {result.state === 'idle' && <span>Waiting for a URL. Already have one from an existing webhook table? That works too.</span>}
+                {result.state === 'idle' && <span>Waiting for a URL. If the agent gives you a link back to this page, clicking it fills this in.</span>}
                 {result.state === 'ok' && (<><Icon name="circle-check-filled" size={12} /><span>Webhook accepted</span>{result.fixed && <span className="note">· rewrote next.freckle.io → next-api.freckle.io</span>}</>)}
                 {result.state === 'bad' && (<><Icon name="circle-x-filled" size={12} /><span>Not a Freckle webhook URL. It should start with https://next-api.freckle.io/v2/dataset-webhooks/</span></>)}
               </div>
@@ -216,7 +246,7 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
           <Step n="03" status={open === 3 ? 'open' : 'todo'} title="Use it, then teach the workflow a play"
                 onOpen={() => ready && setOpen(3)}>
             <p className="step-help">
-              Open any page and click <strong>Send to Freckle</strong> in your bar. A small window confirms and closes itself; the URL is now a row. The workflow only classifies it so far. Each play below is a follow-up prompt for the <strong>same {agent ? AGENTS[agent].name : 'agent'} session</strong> that adds one branch. Edit the bracketed bits first.
+              Open any page and click <strong>Send to Freckle</strong> in your bar. A small window confirms and closes itself; the URL is now a row. The workflow only classifies it so far. Each play below is a follow-up prompt for the <strong>same agent session</strong> that adds one branch. Edit the bracketed bits first.
             </p>
             <div className="plays">
               {PLAYS.map(p => (
