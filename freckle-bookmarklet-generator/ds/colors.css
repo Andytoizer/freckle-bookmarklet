@@ -1,0 +1,70 @@
+/* Freckle color system — exact ramps from packages/ui-kit/src/theme/theme.tsx.
+   Ten steps per hue, 0 = lightest surface tint, 9 = darkest ink.
+   Purple is the primary; shade 5 is the primary shade in both light and dark. */
+:root{
+  --gray-0:#F9FAFA;--gray-1:#F4F5F5;--gray-2:#ECEDED;--gray-3:#DEDFDF;--gray-4:#BBBCBC;
+  --gray-5:#9C9D9D;--gray-6:#737474;--gray-7:#5F6060;--gray-8:#404141;--gray-9:#1F2020;
+
+  --purple-0:#F3EDFF;--purple-1:#E3D6FB;--purple-2:#C2AAF1;--purple-3:#A07CE8;--purple-4:#8354E0;
+  --purple-5:#713BDB;--purple-6:#672EDA;--purple-7:#5721C2;--purple-8:#4C1CAE;--purple-9:#411699;
+
+  --blue-0:#E6F2FF;--blue-1:#D0E0FF;--blue-2:#A0BFFC;--blue-3:#6E9BF6;--blue-4:#437DF2;
+  --blue-5:#276AF0;--blue-6:#1460F0;--blue-7:#0251D6;--blue-8:#0048C0;--blue-9:#003DAB;
+
+  --green-0:#F0FAF6;--green-1:#E2F1EB;--green-2:#BEE3D4;--green-3:#98D5BC;--green-4:#79C9A8;
+  --green-5:#64C19A;--green-6:#59BD94;--green-7:#49A77F;--green-8:#3D9471;--green-9:#2D8060;
+
+  --red-0:#FFEAEC;--red-1:#FDD4D6;--red-2:#F4A7AC;--red-3:#EC777E;--red-4:#E64F57;
+  --red-5:#E3353F;--red-6:#E22732;--red-7:#C91A25;--red-8:#B31220;--red-9:#9E0419;
+
+  --orange-0:#FFF4E2;--orange-1:#FFE9CC;--orange-2:#FFD09C;--orange-3:#FDB766;--orange-4:#FCA13A;
+  --orange-5:#FB931D;--orange-6:#FC8C0C;--orange-7:#E17900;--orange-8:#C86A00;--orange-9:#AE5A00;
+
+  --yellow-0:#FFFAE1;--yellow-1:#FDF4CD;--yellow-2:#F8E79F;--yellow-3:#F5DA6D;--yellow-4:#F2CF43;
+  --yellow-5:#F0C827;--yellow-6:#EFC416;--yellow-7:#D4AC03;--yellow-8:#BD9900;--yellow-9:#A38400;
+
+  /* Semantic aliases — what product code should reference. */
+  --background:#FFFFFF;
+  /* Marketing pages sit on a warm off-white, not #FFF and not --gray-0 (live site). */
+  --page-marketing:#FDFDFC;
+  --foreground:var(--gray-9);
+  --surface-card:#FFFFFF;
+  --surface-sunken:var(--gray-0);
+  --surface-sidebar:var(--gray-0);
+  --surface-muted:var(--gray-1);
+  --surface-hover:var(--gray-1);
+  --surface-active:var(--gray-2);
+
+  --text-body:var(--gray-9);
+  --text-muted:var(--gray-6);
+  --text-subtle:var(--gray-5);
+  --text-inverse:#FFFFFF;
+  --text-link:var(--purple-5);
+  --text-link-hover:var(--purple-7);
+
+  --border:var(--gray-2);
+  --border-strong:var(--gray-3);
+  --border-focus:var(--purple-5);
+
+  --primary:var(--purple-5);
+  --primary-hover:var(--purple-6);
+  --primary-tint:var(--purple-0);
+  --primary-foreground:#FFFFFF;
+
+  --accent-brand-dot:var(--purple-4);
+
+  --success:var(--green-7);--success-tint:var(--green-0);
+  --warning:var(--orange-7);--warning-tint:var(--orange-0);
+  --caution:var(--yellow-7);--caution-tint:var(--yellow-0);
+  --danger:var(--red-5);--danger-tint:var(--red-0);
+  --info:var(--blue-6);--info-tint:var(--blue-0);
+
+  --overlay-bg:rgba(31,32,32,0.32);
+  --input-outline:var(--purple-0);
+
+  /* Column / entity type accents used by the table renderers. */
+  --type-table:var(--green-7);
+  --type-agent:var(--purple-5);
+  --type-formula:var(--blue-6);
+  --type-text:var(--gray-6);
+}

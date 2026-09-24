@@ -1,0 +1,32 @@
+/* Freckle design system tokens — copied from freckle-io/freckle-cli-design-system.
+   Marketing register (www.freckle.io): Geist for headlines and body, Geist Mono for
+   anything machine-authored, #FDFDFC page with a faint dot grid. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap');
+@import './colors.css';
+@import './typography.css';
+@import './spacing.css';
+@import './elevation.css';
+
+:root {
+  --marketing-dot-color: rgba(31, 32, 32, .10);
+  --marketing-dot-size: 1px;
+  --marketing-dot-gap: 26px;
+  --marketing-dot-grid: radial-gradient(var(--marketing-dot-color) var(--marketing-dot-size), transparent var(--marketing-dot-size));
+  --gradient-event: url('/ds/gradients/event-gradient.png');
+  --gradient-event-2: url('/ds/gradients/event-gradient-2.png');
+}
+
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-marketing);
+  font-size: var(--text-sm);
+  line-height: var(--lh-md);
+  color: var(--text-body);
+  background: var(--marketing-dot-grid) 0 0 / var(--marketing-dot-gap) var(--marketing-dot-gap), var(--page-marketing);
+}
+a { color: var(--text-link); text-decoration: none; }
+a:hover { color: var(--text-link-hover); text-decoration: underline; }
+code, kbd, pre, samp { font-family: var(--font-mono); }
+button { font: inherit; color: inherit; }

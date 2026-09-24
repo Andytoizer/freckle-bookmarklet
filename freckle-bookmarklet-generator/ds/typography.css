@@ -1,0 +1,33 @@
+/* Freckle typography.
+   The product is deliberately small-type and dense: 12px is the workhorse UI
+   size (5,500+ uses in the Figma file), 10px is the metadata size, and mono is
+   used for anything machine-authored — IDs, formulas, provider slugs, CLI. */
+:root{
+  --font-sans:'Inter','Inter Variable',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'Geist Mono','SF Mono',ui-monospace,'Roboto Mono',Menlo,monospace;
+  --font-display:'P22 Mackinac Pro',Georgia,serif;
+  /* Marketing register: www.freckle.io sets headlines and body in Geist.
+     Verified on the live H1 (computed styles): Geist, weight 500, letter-spacing -0.02em.
+     --font-display is the wordmark face only. */
+  --font-marketing:'Geist','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --marketing-heading-weight:500;
+  --marketing-heading-tracking:-0.02em;
+
+  --text-2xs:10px;--lh-2xs:14px; /* @kind font */
+  --text-xs:12px;--lh-xs:16px; /* @kind font */
+  --text-sm:14px;--lh-sm:16px; /* @kind font */
+  --text-md:16px;--lh-md:20px; /* @kind font */
+  --text-lg:18px;--lh-lg:22px; /* @kind font */
+  --text-xl:20px;--lh-xl:26px; /* @kind font */
+  --text-2xl:24px;--lh-2xl:30px; /* @kind font */
+  --text-3xl:32px;--lh-3xl:48px; /* @kind font */
+  --text-4xl:48px;--lh-4xl:56px; /* @kind font */
+
+  --weight-regular:400; /* @kind font */
+  --weight-medium:500; /* @kind font */
+  --weight-bold:700; /* @kind font */
+
+  --tracking-tight:-0.01em; /* @kind font */
+  --tracking-normal:0; /* @kind font */
+  --tracking-mono:0.01em; /* @kind font */
+}

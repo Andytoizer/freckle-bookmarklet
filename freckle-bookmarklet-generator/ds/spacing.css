@@ -1,0 +1,27 @@
+/* Spacing, sizing and radii.
+   The spacing/border-radius Figma Variables (see tokens/figma/fig-tokens.css)
+   define 0/2/4/6/8/16 and radii 0/4/6/8/16/24; the component height and padding
+   scales below come from cssVariablesResolver in the product theme. */
+:root{
+  --space-0:0px;--space-2:2px;--space-3:3px;--space-4:4px;--space-6:6px;
+  --space-8:8px;--space-12:12px;--space-16:16px;--space-24:24px;--space-32:32px;--space-48:48px;
+
+  --radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:16px;--radius-xl:24px;
+  --radius-pill:9999px;
+  --radius-default:var(--radius-sm);
+
+  /* Control heights — xs 16, sm 24, md 32, lg 40, xl 48. */
+  --control-h-xs:16px;--control-h-sm:24px;--control-h-md:32px;--control-h-lg:40px;--control-h-xl:48px;
+  --control-px-xs:4px;--control-px-sm:8px;--control-px-md:8px;--control-px-lg:16px;--control-px-xl:16px;
+  --control-gap-xs:4px;--control-gap-sm:4px;--control-gap-md:8px;--control-gap-lg:8px;--control-gap-xl:16px;
+
+  /* Table geometry (ag-grid theme). */
+  --table-row-h:34px;
+  --table-header-h:34px;
+  --table-cell-px:13px;
+  --table-font-size:12px; /* @kind font */
+
+  --sidebar-w:248px;
+  --sidebar-w-collapsed:48px;
+  --side-panel-w:250px;
+}
