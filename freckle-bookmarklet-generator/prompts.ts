@@ -31,7 +31,7 @@ export const AGENTS: Record<Agent, AgentDef> = {
   },
   cursor: {
     name: 'Cursor',
-    mark: '',
+    mark: '/ds/marks/cursor.svg',
     link: p => `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(p)}`,
     fallback: 'Opening Cursor with the prompt. If nothing opens, it’s on your clipboard: paste it into Cursor’s agent chat.',
   },
@@ -43,7 +43,7 @@ Each event is one page I send from my browser with the "Send to Freckle" bookmar
 
 Build the minimum:
 1. A webhook-triggered workflow that stores each url as a row in a table.
-2. A column that classifies the url as one of: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record, hubspot_record, or company_website (anything else).
+2. A JavaScript node (plain code, no AI) that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else).
 
 Don't add enrichment yet. I'll add a branch per type next.
 

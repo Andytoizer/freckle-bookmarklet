@@ -39,9 +39,11 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: start; padding-top: 56px; padding-bottom: 48px; }
 .hero-copy { display: flex; flex-direction: column; gap: 20px; }
 .uses { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
-.uses li { display: grid; grid-template-columns: 16px minmax(0, auto) 12px minmax(0, 1fr); align-items: center; gap: 10px; height: 40px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); white-space: nowrap; }
+.uses li { display: grid; grid-template-columns: auto minmax(0, auto) 12px minmax(0, 1fr); align-items: center; gap: 10px; height: 40px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); white-space: nowrap; }
 .uses li > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .uses img { width: 16px; height: 16px; display: block; }
+.use-marks { display: inline-flex; align-items: center; gap: 4px; }
+.use-marks img { width: 16px; height: 16px; }
 .uses .arrow { color: var(--purple-5); display: inline-flex; }
 
 /* Use-case card — the right column of the hero */
@@ -64,6 +66,21 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .tile.codex { background: var(--tile-codex); }
 .tile.cursor { background: var(--tile-neutral); }
 .tile.plain { background: var(--gray-0); border: 1px solid var(--border); box-shadow: none; }
+.tile.sm { width: 20px; height: 20px; border-radius: var(--radius-xs); }
+.tile.sm img { width: 12px; height: 12px; }
+
+/* Get started menu */
+.menu-wrap { position: relative; }
+.menu-wrap .chev { display: inline-flex; transition: transform var(--duration-fast) var(--ease-standard); }
+.menu-wrap .chev.up { transform: rotate(180deg); }
+.menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 260px; padding: 6px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-floating); transform-origin: top left; animation: menu-in var(--duration-fast) var(--ease-standard); }
+@keyframes menu-in { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: none; } }
+.menu-label { padding: 6px 8px 4px; font-size: var(--text-2xs); letter-spacing: .06em; text-transform: uppercase; color: var(--gray-5); }
+.menu-item { width: 100%; display: flex; align-items: center; gap: 10px; height: var(--control-h-md); padding: 0 8px; background: none; border: 0; border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--gray-9); cursor: pointer; text-align: left; transition: background-color var(--duration-fast) var(--ease-standard); }
+.menu-item:hover { background: var(--surface-hover); }
+.menu-item:focus-visible { outline: none; box-shadow: inset var(--shadow-input-outline); }
+.menu-go { margin-left: auto; color: var(--gray-5); display: inline-flex; }
+.menu-sep { height: 1px; background: var(--border); margin: 6px 0; }
 .agent-name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--gray-9); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .agent-go { color: var(--gray-5); display: inline-flex; }
 .agent-notice { font-size: var(--text-xs); line-height: 16px; color: var(--purple-7); }
@@ -190,7 +207,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
   .wrap { padding: 0 var(--space-16); }
   .hero { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 32px; padding-bottom: 24px; }
   .h1 { font-size: var(--text-3xl); line-height: 40px; }
-  .uses li { white-space: normal; height: auto; padding: 8px 0; grid-template-columns: 16px minmax(0, 1fr); }
+  .uses li { white-space: normal; height: auto; padding: 8px 0; grid-template-columns: auto minmax(0, 1fr); }
   .uses .arrow { display: none; }
   .uses li > span:last-child { grid-column: 2; white-space: normal; }
   .agent-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }

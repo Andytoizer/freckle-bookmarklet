@@ -22,7 +22,8 @@ const webhookFromUrl = (): string => {
 };
 
 export interface BuilderHandle {
-  start: () => void;
+  launch: (agent: Agent) => void;
+  copyPrompt: () => void;
   skipToPaste: () => void;
 }
 
@@ -38,9 +39,7 @@ const useCopy = () => {
 };
 
 const AgentMark: React.FC<{ agent: Agent }> = ({ agent }) => (
-  <span className={`tile ${agent}`}>
-    {AGENTS[agent].mark ? <img src={AGENTS[agent].mark} alt="" /> : <Icon name="cube" size={16} color="var(--gray-9)" />}
-  </span>
+  <span className={`tile ${agent}`}><img src={AGENTS[agent].mark} alt="" /></span>
 );
 
 // Demo slot for step 2. Drop the recording at public/drag-demo.gif and it replaces the placeholder.
@@ -132,17 +131,23 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
 
   const focusPaste = () => setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
 
-  useImperativeHandle(ref, () => ({
-    start: () => { setOpen(1); scrollHere(); },
-    skipToPaste: () => { setOpen(1); scrollHere(); focusPaste(); },
-  }));
-
   const launch = (agent: Agent) => {
     const def = AGENTS[agent];
     copy('setup', SETUP_PROMPT);
     setNotice(def.fallback);
     if (def.link) window.location.href = def.link(SETUP_PROMPT);
   };
+
+  const copyPrompt = () => {
+    copy('setup', SETUP_PROMPT);
+    setNotice('Prompt copied. Paste it into any coding agent.');
+  };
+
+  useImperativeHandle(ref, () => ({
+    launch: a => { setOpen(1); scrollHere(); launch(a); },
+    copyPrompt: () => { setOpen(1); scrollHere(); copyPrompt(); },
+    skipToPaste: () => { setOpen(1); scrollHere(); focusPaste(); },
+  }));
 
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
   const promptLines = SETUP_PROMPT.split('\n');
@@ -170,7 +175,7 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
                     <span className="agent-go"><Icon name="arrow-up-right" size={16} /></span>
                   </button>
                 ))}
-                <button type="button" className="agent" onClick={() => { copy('setup', SETUP_PROMPT); setNotice('Prompt copied. Paste it into any coding agent.'); }}>
+                <button type="button" className="agent" onClick={copyPrompt}>
                   <span className="tile plain"><Icon name="copy" size={16} color="var(--gray-9)" /></span>
                   <span className="agent-name">{copied === 'setup' ? 'Copied' : 'Copy prompt'}</span>
                 </button>
