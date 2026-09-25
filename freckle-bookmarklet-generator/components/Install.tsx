@@ -3,6 +3,7 @@ import Icon from '../ds/Icon';
 import { buildBookmarklet, normalizeWebhook } from '../bookmarklet';
 import { DEFAULT_NAME, WEBHOOK_RE } from '../prompts';
 import DragStep from './DragStep';
+import PlayGrid from './PlayGrid';
 
 // /install?webhook=…&name=… : the teammate page. One job: get the bookmark into their bar.
 const Install: React.FC = () => {
@@ -53,6 +54,16 @@ const Install: React.FC = () => {
           )}
         </div>
       </section>
+
+      {done && (
+        <section className="wrap plays-intro install-plays">
+          <div className="section-head">
+            <h2 className="h h2">What the bookmark can do</h2>
+          </div>
+          <p className="step-help">Which of these run on a page depends on what your teammate has wired up in Freckle. Want one that isn't there yet? Ask them to add it.</p>
+          <PlayGrid />
+        </section>
+      )}
     </>
   );
 };

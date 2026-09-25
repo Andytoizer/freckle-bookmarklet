@@ -252,6 +252,8 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .install-done { display: flex; gap: 16px; align-items: flex-start; padding: 20px 24px; border: 1px solid var(--green-2); border-radius: var(--radius-md); background: var(--success-tint); max-width: 720px; }
 .install-done .done-mark { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--success); color: #fff; flex-shrink: 0; }
 .install-done h3 { margin: 0 0 4px; }
+.install-plays { padding-top: 8px; }
+.install-plays > .step-help { margin: -12px 0 20px; }
 
 /* Notes */
 .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; max-width: 900px; }

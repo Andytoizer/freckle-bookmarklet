@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
-import { AGENTS, PLAYS, type Agent } from '../prompts';
+import { AGENTS, type Agent } from '../prompts';
+import PlayGrid from './PlayGrid';
 
 interface HeroProps {
   onAgent: (agent: Agent) => void;
@@ -70,16 +71,7 @@ const Hero: React.FC<HeroProps> = props => (
       <div className="section-head">
         <h2 className="h h2">What you can enrich</h2>
       </div>
-      <div className="play-grid">
-        {PLAYS.map(p => (
-          <div key={p.id} className="play-card">
-            <span className="play-marks">{p.marks.map(m => <span key={m} className="play-mark"><img src={m} alt="" /></span>)}</span>
-            <span className="play-card-title">{p.title}</span>
-            <span className="play-card-io"><span className="k">send</span>{p.send}</span>
-            <span className="play-card-io"><span className="k">get</span>{p.get}</span>
-          </div>
-        ))}
-      </div>
+      <PlayGrid />
     </section>
   </>
 );
