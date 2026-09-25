@@ -141,7 +141,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .step-head:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); }
 .step.todo .step-head { cursor: default; }
 .step.todo .step-title { color: var(--gray-5); }
-.step-title { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: var(--weight-medium); color: var(--gray-9); margin: 0; letter-spacing: var(--tracking-tight); }
+.step-title { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: var(--weight-medium); color: var(--gray-9); margin: 0; letter-spacing: var(--tracking-tight); white-space: nowrap; }
 .step-title.sm { font-size: var(--text-sm); line-height: var(--lh-sm); display: block; }
 .step-summary { font-size: var(--text-xs); color: var(--success); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .step-head .chev { margin-left: auto; color: var(--gray-4); display: inline-flex; }
@@ -170,7 +170,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .status .note { color: var(--gray-5); }
 
 /* Step 2 — drag chip beside the how-to demo */
-.drag-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 28px; align-items: start; }
+.drag-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
 .drag-col { display: flex; flex-direction: column; gap: 12px; }
 .drag-col .step-help { margin-bottom: 4px; }
 .help-toggle { align-self: flex-start; font-size: var(--text-xs); color: var(--gray-5); }
@@ -184,7 +184,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .dragbar .bm-chip:hover { border-color: var(--gray-4); color: var(--gray-9); text-decoration: none; }
 .dragbar .bm-chip:active { cursor: grabbing; transform: scale(.97); }
 .dragbar .bm-chip:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); }
-.dragbar .hint { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-2xs); line-height: 14px; letter-spacing: var(--tracking-mono); color: var(--purple-7); min-width: 0; }
+.dragbar .hint { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-2xs); line-height: 14px; letter-spacing: var(--tracking-mono); color: var(--purple-7); min-width: 0; white-space: nowrap; }
 .dragbar .grip { color: var(--purple-3); }
 .kbd-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--text-xs); color: var(--gray-6); }
 .kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--radius-xs); border: 1px solid var(--border-strong); background: var(--surface-card); font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--gray-7); }
@@ -250,6 +250,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
   .agent-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .step { grid-template-columns: 40px minmax(0, 1fr); gap: 0 14px; }
   .step-summary { display: none; }
+  .step-title { white-space: normal; }
   .drag-grid, .plays, .notes { grid-template-columns: minmax(0, 1fr); }
   .play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .prompt-head { height: auto; padding: 8px 8px 8px 12px; flex-wrap: wrap; }
