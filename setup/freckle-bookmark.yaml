@@ -1,0 +1,50 @@
+# Send to Freckle bookmark: intake + URL classifier + one Switch branch per page type.
+# Plays are added later as branches under the matching case.
+kind: workflow_draft
+schemaVersion: 1
+workflowId: freckle-bookmark-router
+types: {}
+inputs:
+  url: string
+nodes:
+  classify:
+    uses: decision@1.0.0
+    title: Classify the page URL
+    description: Decides which kind of page the rep sent, from the URL alone.
+    with:
+      url: $inputs.url
+    config:
+      inputs:
+        - type: string
+          label: Page URL
+          portId: url
+      questions:
+        type:
+          type: choice
+          criteria:
+            linkedin_profile: The host is linkedin.com or a subdomain and the path starts with /in/ followed by a profile identifier.
+            linkedin_company: The host is linkedin.com or a subdomain and the path starts with /company/ or /school/ followed by an identifier.
+            hubspot_record: A HubSpot CRM record page, such as app.hubspot.com/contacts/<portal>/record/<object>/<id> or another HubSpot record path.
+            salesforce_record: A Salesforce record page on lightning.force.com, salesforce.com, force.com, or a Salesforce org domain, with a record path or identifier.
+            company_website: Any other URL, including a company home page.
+          instructions: Classify the page URL by its actual host and path. Choose exactly one type. Ignore case, tracking parameters, and fragments. Apply the four specific categories before company_website.
+  route:
+    uses: switch@1.0.0
+    title: Route by page type
+    with:
+      value: $nodes.classify.type
+    config:
+      cases:
+        - linkedin_profile
+        - linkedin_company
+        - hubspot_record
+        - salesforce_record
+        - company_website
+    cases: {}
+outputs:
+  type:
+    type: string
+    from: $nodes.classify.type
+  url:
+    type: string
+    from: $inputs.url

@@ -1,0 +1,1 @@
+{ "fieldCatalog": [ { "id": "url", "path": "/url", "label": "URL", "type": "string", "visible": true, "order": 0 } ] }
