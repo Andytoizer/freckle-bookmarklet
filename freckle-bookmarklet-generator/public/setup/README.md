@@ -30,9 +30,9 @@ The webhook URL is saved in a dot-file next to the script, because Freckle only 
 The setup prompt on the bookmarklet page should tell the agent to fetch and run this rather than build the workbook itself:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/Andytoizer/freckle-bookmarklet/main/setup/setup.sh -o setup.sh
-curl -fsSL https://raw.githubusercontent.com/Andytoizer/freckle-bookmarklet/main/setup/freckle-bookmark.yaml -o freckle-bookmark.yaml
-curl -fsSL https://raw.githubusercontent.com/Andytoizer/freckle-bookmarklet/main/setup/catalog.json -o catalog.json
+curl -fsSL https://freckle-bookmarklet.vercel.app/setup/setup.sh -o setup.sh
+curl -fsSL https://freckle-bookmarklet.vercel.app/setup/freckle-bookmark.yaml -o freckle-bookmark.yaml
+curl -fsSL https://freckle-bookmarklet.vercel.app/setup/catalog.json -o catalog.json
 bash setup.sh --name "<what this bookmark is for>"
 ```
 

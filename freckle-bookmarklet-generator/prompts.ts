@@ -39,20 +39,14 @@ export const AGENTS: Record<Agent, AgentDef> = {
   },
 };
 
-export const SETUP_PROMPT = `Use Freckle to build a workflow that starts from a webhook. Name the workbook "Freckle bookmark".
+export const SETUP_URL = `${SITE_URL}setup`;
 
-Each event is one page I send from my browser with the "Send to Freckle" bookmark. It has a single field: url.
 
-Build the minimum:
-1. A webhook-triggered workflow that stores each url as a row in a table.
-2. A Jev decision node that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else). Branch on that type with a Switch node.
+export const SETUP_PROMPT = `Set up the Freckle bookmark workflow for me.
 
-Don't add enrichment yet. I'll add a branch per type next.
+Follow ${SETUP_URL} exactly, step by step, using the Freckle CLI. The workflow itself is already written and validated; you're creating the workbook, the webhook, and the connection, then testing it.
 
-Read and follow ${RULES_URL} before you start and before you report back.
-
-When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
-${RETURN_URL}`;
+When it's done, copy the webhook URL to my clipboard and give me the link back to ${SITE_URL} with the webhook filled in, as the last step describes.`;
 
 export interface Play {
   id: string;

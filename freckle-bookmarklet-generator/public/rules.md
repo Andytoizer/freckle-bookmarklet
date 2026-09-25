@@ -4,7 +4,7 @@ Rules for a coding agent building or extending the Freckle bookmark workflow. Fo
 
 ## 1. The workflow
 
-1. The workbook is named "Freckle bookmark". There is one workflow in it, triggered by a webhook. Every event has a single field, `url`, which is also the row key: sending the same URL again updates its row.
+1. The workbook is named "Freckle bookmark". There is one workflow in it, triggered by a webhook. Every event has a single field, `url`, which is also the row key: sending the same URL again updates its row. The base workflow is https://freckle-bookmarklet.vercel.app/freckle-bookmark.yaml and the setup steps are https://freckle-bookmarklet.vercel.app/setup.
 2. A Jev decision node classifies each URL into a column called `type`: `linkedin_profile`, `linkedin_company`, `salesforce_record`, `hubspot_record`, or `company_website`. A Switch node branches on it.
 3. Each play adds one branch under the matching Switch case. Never change the webhook, the input field, the classifier or the other branches while adding one.
 4. If the workflow already exists in the org, extend it. Don't create a second one.

@@ -1,0 +1,50 @@
+# Freckle bookmark — base workflow.
+# One input (url), a Jev decision that classifies it, and a Switch with one case per type.
+# Plays add branches under the Switch cases. Validate with: freckle workflow draft validate --file freckle-bookmark.yaml
+kind: workflow_draft
+schemaVersion: 1
+workflowId: freckle-bookmark
+inputs:
+  url: string
+nodes:
+  classify:
+    uses: decision@1.0.0
+    title: Classify the page URL
+    description: Decides which kind of page was sent so the Switch can route it to the right branch.
+    with:
+      url: $inputs.url
+    config:
+      inputs:
+        - type: string
+          label: Page URL
+          portId: url
+      questions:
+        type:
+          type: choice
+          criteria:
+            linkedin_profile: The hostname is linkedin.com or a LinkedIn subdomain and the path starts with /in/ followed by a profile identifier.
+            linkedin_company: The hostname is linkedin.com or a LinkedIn subdomain and the path starts with /company/ followed by a company identifier.
+            salesforce_record: The URL is a Salesforce record page on a salesforce.com, force.com, or lightning.force.com hostname, with a record identifier in its path.
+            hubspot_record: The URL is a HubSpot CRM record page on a hubspot.com hostname, with a record identifier in its path.
+            company_website: Any other URL, including ordinary company websites and URLs that do not meet another category.
+          instructions: Classify the supplied URL by its actual hostname and path. Choose exactly one category. Ignore query strings, fragments, case, and a leading www.
+  route:
+    uses: switch@1.0.0
+    title: Route by page type
+    description: One case per page type. Plays attach their branch under the matching case.
+    with:
+      value: $nodes.classify.type
+    config:
+      cases:
+        - linkedin_profile
+        - linkedin_company
+        - salesforce_record
+        - hubspot_record
+        - company_website
+outputs:
+  url:
+    type: string
+    from: $inputs.url
+  type:
+    type: string
+    from: $nodes.classify.type

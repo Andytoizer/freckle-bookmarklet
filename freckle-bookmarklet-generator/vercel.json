@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/rules", "destination": "/rules.md" }]
+  "rewrites": [
+    { "source": "/rules", "destination": "/rules.md" },
+    { "source": "/setup", "destination": "/setup.md" }
+  ]
 }
