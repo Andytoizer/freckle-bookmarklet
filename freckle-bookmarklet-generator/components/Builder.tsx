@@ -191,7 +191,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                 summary={dragged ? 'Send to Freckle · in your bookmarks bar' : undefined} onOpen={() => ready && setOpen(2)}>
             <div className="drag-grid">
               <div className="drag-col">
-                <p className="step-help">Click and hold the purple button, drag it up into the bookmarks bar under your search bar, let go.</p>
+                <p className="step-help">Click and hold the <strong>Send to Freckle</strong> bookmark, drag it up into the bookmarks bar under your search bar, let go.</p>
                 <span className="desktop-only-note">Bookmarks bars are a desktop thing. Open this page in Chrome, Edge, Safari or Firefox on your computer to install it.</span>
                 <div className="dragbar">
                   <span className="grip"><Icon name="grip-vertical" size={16} /></span>
@@ -204,10 +204,12 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                   <span className="hint"><Icon name="arrow-up" size={12} /><span>drag me to your bookmarks bar</span></span>
                 </div>
                 {nudge && <span className="nudge">That's the bookmark itself. Drag it up to your bookmarks bar instead of clicking it here.</span>}
-                <button type="button" className={`btn confirm ${dragged ? 'btn-primary' : 'btn-quiet'}`} onClick={() => { setDragged(true); setOpen(3); }}>
-                  <Icon name="check" size={16} /> It's in my bookmarks bar
-                </button>
-                <button type="button" className="linkbtn help-toggle" onClick={() => setShowHelp(h => !h)}>{showHelp ? 'Hide help' : 'Trouble dragging?'}</button>
+                {dragged && (
+                  <button type="button" className="btn btn-primary confirm" onClick={() => setOpen(3)}>
+                    <Icon name="check" size={16} /> It's in my bookmarks bar
+                  </button>
+                )}
+                <button type="button" className="linkbtn help-toggle" onClick={() => setShowHelp(h => !h)}>{showHelp ? 'Hide help' : 'Bookmark not showing up?'}</button>
                 {showHelp && (
                   <>
                     <div className="kbd-row">
@@ -217,7 +219,10 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                       <span className="kbd">Ctrl</span><span className="kbd">⇧</span><span className="kbd">B</span>
                     </div>
                     <div className="kbd-row">
-                      <span>Can't drag? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
+                      <span>Dragging didn't take? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
+                    </div>
+                    <div className="kbd-row">
+                      <span>Already dragged it? <button type="button" className="linkbtn" onClick={() => { setDragged(true); setOpen(3); }}>Continue to plays</button></span>
                     </div>
                   </>
                 )}
