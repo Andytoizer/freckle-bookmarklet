@@ -1,6 +1,6 @@
 // State and the send action, shared by the side panel and the keyboard shortcut.
 import * as freckle from './freckle.js';
-import { classify, normalize, isSalesNavLead, extractSalesNavProfile, PAGE_TYPES } from './pages.js';
+import { classify, normalize, isSalesNavLead, extractSalesNavProfile, withArticle } from './pages.js';
 
 const local = chrome.storage.local;
 
@@ -94,8 +94,7 @@ export async function send(tab, targetId) {
   const target = targetId
     ? cache.targets.find((t) => t.id === targetId)
     : pickDefault(applicable, await getDefaults(auth.orgId), page.pageType);
-  const typeLabel = PAGE_TYPES[page.pageType].label;
-  if (!target) return { ok: false, pageType: page.pageType, error: `No workflow takes a ${typeLabel} yet. Add one in the side panel.` };
+  if (!target) return { ok: false, pageType: page.pageType, error: `No workflow takes ${withArticle(page.pageType)} yet. Add one in the side panel.` };
 
   const item = { at: Date.now(), url: page.url, title: tab.title || '', pageType: page.pageType, targetId: target.id, targetName: target.name, workbookUrl: target.workbookUrl };
   try {

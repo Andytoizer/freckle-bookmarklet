@@ -1,6 +1,6 @@
 import * as freckle from './lib/freckle.js';
 import * as core from './lib/core.js';
-import { classify, isSalesNavLead, PAGE_TYPES } from './lib/pages.js';
+import { classify, isSalesNavLead, PAGE_TYPES, withArticle } from './lib/pages.js';
 import { ICONS } from './lib/icons.js';
 
 const $app = document.getElementById('app');
@@ -30,7 +30,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 function icon(name, size = 16, cls = '') {
   const g = ICONS[`${name}-${size}`];
   if (!g) return '';
-  const body = g.body.replace(/\sfill="[^"]*"/g, '');
+  // Some exported glyphs carry a full-size frame path; drop it so it doesn't paint a square.
+  const body = g.body
+    .replace(/<path d="M 0 0 L (\d+) 0 L \1 \1 L 0 \1 L 0 0 Z"[^>]*\/>/g, '')
+    .replace(/\sfill="[^"]*"/g, '');
   return `<svg class="icon ${cls}" width="${size}" height="${size}" viewBox="${g.viewBox}" fill="currentColor" aria-hidden="true">${body}</svg>`;
 }
 
@@ -229,10 +232,9 @@ function sendBlock() {
     </div>`;
   }
   const applicable = core.targetsFor(S.cache.targets, type);
-  const label = PAGE_TYPES[type].label;
   if (!applicable.length) {
     return `<div class="callout">
-      <h3>No workflow takes a ${esc(label)} yet</h3>
+      <h3>No workflow takes ${esc(withArticle(type))} yet</h3>
       <p>Add one and it shows up here for everyone in ${esc(orgName())}.</p>
       <div><button class="btn" data-action="add-workflow" data-type="${type}">${icon('plus', 16)} Add workflow</button></div>
     </div>`;
@@ -323,14 +325,14 @@ function viewSettings() {
 
     <section>
       <div class="section-label" style="margin-bottom:var(--space-6)">Keyboard shortcut</div>
-      <div class="note">${S.shortcut ? `<kbd>${esc(S.shortcut)}</kbd> sends the current page to its default workflow.` : 'No shortcut set.'}
-        <button class="linkbtn" data-action="shortcuts">Change</button></div>
+      <p class="hint" style="margin:0">${S.shortcut ? `<kbd>${esc(S.shortcut)}</kbd> sends the current page to its default workflow.` : 'No shortcut set.'}
+        <button class="linkbtn" data-action="shortcuts">Change</button></p>
     </section>
 
     <section>
       <div class="section-label" style="margin-bottom:var(--space-6)">Page access</div>
-      <div class="note">${S.perm.tabs && S.perm.linkedin ? 'Allowed. The panel can see the current tab and read Sales Navigator leads.' : 'Not allowed yet.'}
-        ${S.perm.tabs && S.perm.linkedin ? '' : '<button class="linkbtn" data-action="grant">Allow</button>'}</div>
+      <p class="hint" style="margin:0">${S.perm.tabs && S.perm.linkedin ? 'Allowed. The panel can see the current tab and read Sales Navigator leads.' : 'Not allowed yet.'}
+        ${S.perm.tabs && S.perm.linkedin ? '' : '<button class="linkbtn" data-action="grant">Allow</button>'}</p>
     </section>
   </main>
   <footer class="foot"><div class="line">Signed in to Freckle. <button class="linkbtn" data-action="signout">Sign out</button></div></footer>`;
@@ -383,10 +385,12 @@ function viewForm() {
         <label class="label" for="f-field">Field that gets the URL</label>
         ${custom
           ? `<input id="f-field" class="field mono" value="${esc(f.field)}" placeholder="/linkedin_url">`
-          : `<div class="select-wrap"><select id="f-field-sel" class="select mono" ${ds ? '' : 'disabled'}>
-              ${paths.map((p) => `<option value="${esc(p)}" ${p === f.field ? 'selected' : ''}>${esc(p)}</option>`).join('')}
-              <option value="__custom">Other field…</option>
-            </select><span class="chev">${icon('chevron-down', 12)}</span></div>`}
+          : ds
+            ? `<div class="select-wrap"><select id="f-field-sel" class="select mono">
+                ${paths.map((p) => `<option value="${esc(p)}" ${p === f.field ? 'selected' : ''}>${esc(p)}</option>`).join('')}
+                <option value="__custom">Other field…</option>
+              </select><span class="chev">${icon('chevron-down', 12)}</span></div>`
+            : `<div class="select-wrap"><select class="select" disabled><option>Choose a dataset first</option></select><span class="chev">${icon('chevron-down', 12)}</span></div>`}
       </div>
       <div>
         <span class="label">Pages it takes</span>
@@ -409,10 +413,14 @@ function viewForm() {
   </main>`;
 }
 
+let lastView = null;
 function render() {
   const views = { loading: () => `${header()}<main class="main"><div class="waiting">${icon('circle-dashed', 16, 'spin')} Loading…</div></main>`, signin: viewSignin, org: viewOrg, main: viewMain, settings: viewSettings, form: viewForm };
   const active = document.activeElement?.id;
   $app.innerHTML = views[S.view]();
+  // Animate only when the screen changes, not on every re-render.
+  if (S.view === lastView) $app.querySelectorAll('.fade-in').forEach((el) => el.classList.remove('fade-in'));
+  lastView = S.view;
   if (active) document.getElementById(active)?.focus();
 }
 

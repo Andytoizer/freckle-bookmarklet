@@ -48,6 +48,8 @@ Build the minimum:
 
 Don't add enrichment yet. I'll add a branch per type next.
 
+Test it end to end with one real URL before you report back, then remove the test row.
+
 When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
 ${RETURN_URL}`;
 

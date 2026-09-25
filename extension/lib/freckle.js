@@ -1,5 +1,5 @@
 // Freckle API client. Uses the same endpoints and token the Freckle CLI uses:
-// device sign-in at /v2/cli-device-auth, then a Bearer token plus an x-org-id header.
+// device sign-in at /v2/cli-device-auth, then the token in X-Api-Key plus an x-org-id header.
 
 export const API_BASE = 'https://next-api.freckle.io';
 export const APP_BASE = 'https://next.freckle.io';
@@ -23,7 +23,8 @@ async function request(path, { token, orgId, method = 'GET', query, body } = {})
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
   }
   const headers = { accept: 'application/json' };
-  if (token) headers.authorization = `Bearer ${token}`;
+  // CLI tokens go in X-Api-Key. Freckle rejects them as Bearer tokens ("Missing API key").
+  if (token) headers['x-api-key'] = token;
   if (orgId) headers['x-org-id'] = orgId;
   if (body !== undefined) headers['content-type'] = 'application/json';
 

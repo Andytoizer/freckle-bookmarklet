@@ -8,6 +8,9 @@ export const PAGE_TYPES = {
   website: { label: 'Website', marks: ['website.svg'] },
 };
 
+// "a LinkedIn profile", "a website": for sentences.
+export const withArticle = (type) => (type === 'website' ? 'a website' : `a ${PAGE_TYPES[type].label}`);
+
 export function classify(rawUrl) {
   let u;
   try { u = new URL(rawUrl); } catch { return null; }
