@@ -58,27 +58,21 @@ const Hero: React.FC<HeroProps> = props => (
   <>
     <section className="wrap hero">
       <div className="hero-copy">
-        <div className="eyebrow mono"><span className="prompt">❯</span> bookmarklet · for reps</div>
-        <h1 className="h h1">One bookmark. Any page. Into Freckle.</h1>
+        <div className="eyebrow mono"><span className="prompt">❯</span> bookmarklet</div>
+        <h1 className="h h1">One bookmark. Any page.<br />Into Freckle.</h1>
         <p className="lede">
-          Click it in your browser bar and the page you're on becomes a row in Freckle. A workflow you built with your coding agent takes it from there.
+          Keep <strong>Send to Freckle</strong> in your bookmarks bar. Click it on a LinkedIn profile, a CRM record or a company site, and that page lands in Freckle as a row, where a workflow your coding agent built enriches it and routes it wherever it needs to go.
         </p>
         <div className="hero-actions">
           <GetStarted {...props} />
           <span className="muted" style={{ fontSize: 'var(--text-xs)' }}>About a minute. No code to paste.</span>
         </div>
       </div>
-      <ol className="how">
-        <li><span className="mono n">01</span><span>Your agent builds the workflow and hands you a webhook URL.</span></li>
-        <li><span className="mono n">02</span><span>Drag <strong>Send to Freckle</strong> into your bookmarks bar.</span></li>
-        <li><span className="mono n">03</span><span>Click it on any page. Add plays as you go.</span></li>
-      </ol>
     </section>
 
     <section className="wrap plays-intro">
       <div className="section-head">
         <h2 className="h h2">What you can enrich</h2>
-        <span className="eyebrow mono">{PLAYS.length} plays · one workflow routes them all</span>
       </div>
       <div className="play-grid">
         {PLAYS.map(p => (

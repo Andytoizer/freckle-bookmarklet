@@ -63,7 +63,7 @@ export interface Play {
 const LI = '/ds/marks/linkedin.svg';
 const SF = '/ds/marks/salesforce.svg';
 const HS = '/ds/marks/hubspot.svg';
-const FR = '/ds/logos/stamp_black_full.svg';
+const WEB = '/ds/marks/website.svg';
 const SN = '/ds/marks/sales-navigator.png';
 
 export const PLAYS: Play[] = [
@@ -81,7 +81,7 @@ Enrich the person from the LinkedIn URL: name, title, company, location. Find an
     id: 'salesforce',
     marks: [SF],
     title: 'Enrich a Salesforce record',
-    send: 'A lead or contact URL',
+    send: 'A lead, contact or company URL',
     get: 'Missing email, phone and LinkedIn filled in',
     prompt: `Add a branch for salesforce_record.
 
@@ -91,15 +91,15 @@ Pull the record ID out of the URL and read the lead or contact from Salesforce. 
     id: 'hubspot',
     marks: [HS],
     title: 'Enrich a HubSpot record',
-    send: 'A contact or company URL',
-    get: 'Missing fields filled in',
+    send: 'A lead, contact or company URL',
+    get: 'Missing email, phone and LinkedIn filled in',
     prompt: `Add a branch for hubspot_record.
 
 Pull the record ID out of the URL and read the contact or company from HubSpot. Fill any empty email, phone, LinkedIn, title or company-size fields and write them back to that record. Never overwrite a field that already has a value.`,
   },
   {
     id: 'icp-contacts',
-    marks: [FR, LI],
+    marks: [WEB, LI, SN],
     title: 'Find ICP contacts at a company',
     send: 'A company website or LinkedIn page',
     get: 'Up to 5 matching people, with contact info',
@@ -109,7 +109,7 @@ Resolve the company (domain and LinkedIn page). Find up to 5 people there who ma
   },
   {
     id: 'icp-fit',
-    marks: [FR],
+    marks: [WEB, LI, SN],
     title: 'Score company ICP fit',
     send: 'A company website or LinkedIn page',
     get: 'A 1–10 fit score with reasons',
@@ -119,7 +119,7 @@ Enrich the company: industry, headcount, funding, tech stack, hiring signals. Sc
   },
   {
     id: 'posts',
-    marks: [LI],
+    marks: [LI, SN],
     title: 'Pull recent posts and who engaged',
     send: 'A person or company LinkedIn page',
     get: 'Last 10 posts, plus the people who liked or commented',
@@ -129,7 +129,7 @@ Use the Harvest API actors on Apify to pull the last 10 LinkedIn posts from the 
   },
   {
     id: 'first-touch',
-    marks: [LI, FR],
+    marks: [LI, SN],
     title: 'Draft a first-touch email',
     send: 'A LinkedIn profile',
     get: 'A three-line personalized email, ready to send',
@@ -139,7 +139,7 @@ After enrichment, research the person and their company: recent posts, role chan
   },
   {
     id: 'lookalikes',
-    marks: [FR],
+    marks: [WEB, LI, SN],
     title: 'Find lookalike companies',
     send: 'A company website',
     get: '10 similar companies, scored',

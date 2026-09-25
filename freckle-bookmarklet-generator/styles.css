@@ -36,8 +36,9 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .wordmark img { height: 18px; width: auto; display: block; }
 
 /* Hero */
-.hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-top: 56px; padding-bottom: 40px; }
-.hero-copy { display: flex; flex-direction: column; gap: 20px; }
+.hero { display: flex; justify-content: center; text-align: center; padding-top: 64px; padding-bottom: 48px; }
+.hero-copy { display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 640px; }
+.hero .lede { max-width: 58ch; }
 .uses { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
 .uses li { display: grid; grid-template-columns: auto minmax(0, auto) 12px minmax(0, 1fr); align-items: center; gap: 10px; height: 40px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); white-space: nowrap; }
 .uses li > span:last-child { overflow: hidden; text-overflow: ellipsis; }
@@ -64,7 +65,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .play-card-io .k { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: .06em; text-transform: uppercase; color: var(--gray-5); width: 28px; flex-shrink: 0; }
 
 /* Use-case card — the right column of the hero */
-.hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); }
+.hero-actions { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); }
 .uses-card { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 8px; }
 .uses-card .uses { margin: 0; border-top: 0; }
 .uses-card .uses li:last-child { border-bottom: 0; }
@@ -229,7 +230,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 
 @media (max-width: 880px) {
   .wrap { padding: 0 var(--space-16); }
-  .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 32px; padding-bottom: 24px; }
+  .hero { padding-top: 32px; padding-bottom: 24px; }
   .h1 { font-size: var(--text-3xl); line-height: 40px; }
   .uses li { white-space: normal; height: auto; padding: 8px 0; grid-template-columns: auto minmax(0, 1fr); }
   .uses .arrow { display: none; }
