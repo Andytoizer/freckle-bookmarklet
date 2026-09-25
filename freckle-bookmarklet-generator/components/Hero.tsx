@@ -1,25 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
-import { AGENTS, type Agent } from '../prompts';
+import { AGENTS, PLAYS, type Agent } from '../prompts';
 
 interface HeroProps {
   onAgent: (agent: Agent) => void;
   onCopy: () => void;
   onSkip: () => void;
 }
-
-interface Use {
-  marks: string[];
-  text: string;
-  out: string;
-}
-
-const USES: Use[] = [
-  { marks: ['/ds/marks/linkedin.svg'], text: 'a LinkedIn profile', out: 'work email and mobile' },
-  { marks: ['/ds/marks/salesforce.svg', '/ds/marks/hubspot.svg'], text: 'a CRM record', out: 'empty fields filled in' },
-  { marks: ['/ds/marks/linkedin.svg'], text: 'a company LinkedIn page', out: 'find ICP contacts' },
-  { marks: [], text: 'a company website', out: 'find ICP contacts' },
-];
 
 const AgentMark: React.FC<{ agent: Agent }> = ({ agent }) => (
   <span className={`tile sm ${agent}`}><img src={AGENTS[agent].mark} alt="" /></span>
@@ -68,35 +55,43 @@ const GetStarted: React.FC<HeroProps> = ({ onAgent, onCopy, onSkip }) => {
 };
 
 const Hero: React.FC<HeroProps> = props => (
-  <section className="wrap hero">
-    <div className="hero-copy">
-      <div className="eyebrow mono"><span className="prompt">❯</span> bookmarklet · for reps</div>
-      <h1 className="h h1">One bookmark. Any page. Into Freckle.</h1>
-      <p className="lede">
-        Click it in your browser bar and the page you're on becomes a row in Freckle, where a workflow you built with your coding agent takes it from there.
-      </p>
-      <div className="hero-actions">
-        <GetStarted {...props} />
+  <>
+    <section className="wrap hero">
+      <div className="hero-copy">
+        <div className="eyebrow mono"><span className="prompt">❯</span> bookmarklet · for reps</div>
+        <h1 className="h h1">One bookmark. Any page. Into Freckle.</h1>
+        <p className="lede">
+          Click it in your browser bar and the page you're on becomes a row in Freckle. A workflow you built with your coding agent takes it from there.
+        </p>
+        <div className="hero-actions">
+          <GetStarted {...props} />
+          <span className="muted" style={{ fontSize: 'var(--text-xs)' }}>About a minute. No code to paste.</span>
+        </div>
       </div>
-    </div>
+      <ol className="how">
+        <li><span className="mono n">01</span><span>Your agent builds the workflow and hands you a webhook URL.</span></li>
+        <li><span className="mono n">02</span><span>Drag <strong>Send to Freckle</strong> into your bookmarks bar.</span></li>
+        <li><span className="mono n">03</span><span>Click it on any page. Add plays as you go.</span></li>
+      </ol>
+    </section>
 
-    <div className="uses-card">
-      <span className="eyebrow mono">what you can enrich</span>
-      <ul className="uses">
-        {USES.map(u => (
-          <li key={u.text}>
-            <span className="use-marks">
-              {u.marks.length ? u.marks.map(m => <img key={m} src={m} alt="" />) : <Icon name="building" size={16} color="var(--gray-6)" />}
-            </span>
-            <span>Enrich <strong>{u.text}</strong></span>
-            <span className="arrow"><Icon name="arrow-up-right" size={12} /></span>
-            <span className="muted">{u.out}</span>
-          </li>
+    <section className="wrap plays-intro">
+      <div className="section-head">
+        <h2 className="h h2">What you can enrich</h2>
+        <span className="eyebrow mono">{PLAYS.length} plays · one workflow routes them all</span>
+      </div>
+      <div className="play-grid">
+        {PLAYS.map(p => (
+          <div key={p.id} className="play-card">
+            <span className="play-marks">{p.marks.map(m => <span key={m} className="play-mark"><img src={m} alt="" /></span>)}</span>
+            <span className="play-card-title">{p.title}</span>
+            <span className="play-card-io"><span className="k">send</span>{p.send}</span>
+            <span className="play-card-io"><span className="k">get</span>{p.get}</span>
+          </div>
         ))}
-      </ul>
-      <span className="mono subtle" style={{ fontSize: 'var(--text-2xs)' }}>one workflow routes them all · add plays in step 3</span>
-    </div>
-  </section>
+      </div>
+    </section>
+  </>
 );
 
 export default Hero;

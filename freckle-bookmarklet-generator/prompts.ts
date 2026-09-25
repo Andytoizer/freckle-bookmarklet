@@ -44,7 +44,7 @@ Each event is one page I send from my browser with the "Send to Freckle" bookmar
 
 Build the minimum:
 1. A webhook-triggered workflow that stores each url as a row in a table.
-2. A JavaScript node (plain code, no AI) that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else).
+2. A Jev decision node that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else). Branch on that type with a Switch node.
 
 Don't add enrichment yet. I'll add a branch per type next.
 
@@ -64,11 +64,12 @@ const LI = '/ds/marks/linkedin.svg';
 const SF = '/ds/marks/salesforce.svg';
 const HS = '/ds/marks/hubspot.svg';
 const FR = '/ds/logos/stamp_black_full.svg';
+const SN = '/ds/marks/sales-navigator.png';
 
 export const PLAYS: Play[] = [
   {
     id: 'person',
-    marks: [LI],
+    marks: [LI, SN],
     title: 'Enrich a LinkedIn profile',
     send: 'A profile or Sales Navigator lead',
     get: 'Work email, mobile, title, company',
@@ -124,7 +125,7 @@ Enrich the company: industry, headcount, funding, tech stack, hiring signals. Sc
     get: 'Last 10 posts, plus the people who liked or commented',
     prompt: `Add a branch for linkedin_profile and linkedin_company.
 
-Pull the last 10 LinkedIn posts from the page. For each post, capture the text, date and the people who liked or commented (name, title, company, profile URL). Store the engagers in a table called "Engagers" and flag any who match our ICP titles: [VP Sales, Head of RevOps, GTM Engineer].`,
+Use the Harvest API actors on Apify to pull the last 10 LinkedIn posts from the page and to scrape the people who reacted to or commented on each one. For each post capture the text and date; for each engager capture name, title, company and profile URL. Store the engagers in a table called "Engagers" and flag any who match our ICP titles: [VP Sales, Head of RevOps, GTM Engineer].`,
   },
   {
     id: 'first-touch',

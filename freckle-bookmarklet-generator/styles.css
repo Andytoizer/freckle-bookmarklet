@@ -36,7 +36,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .wordmark img { height: 18px; width: auto; display: block; }
 
 /* Hero */
-.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: start; padding-top: 56px; padding-bottom: 48px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-top: 56px; padding-bottom: 40px; }
 .hero-copy { display: flex; flex-direction: column; gap: 20px; }
 .uses { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
 .uses li { display: grid; grid-template-columns: auto minmax(0, auto) 12px minmax(0, 1fr); align-items: center; gap: 10px; height: 40px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); white-space: nowrap; }
@@ -46,11 +46,32 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .use-marks img { width: 16px; height: 16px; }
 .uses .arrow { color: var(--purple-5); display: inline-flex; }
 
+/* How it works — three quiet lines beside the hero copy */
+.how { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.how li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: var(--text-sm); line-height: 20px; color: var(--gray-7); }
+.how .n { flex-shrink: 0; width: 24px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-xs); background: var(--gray-1); font-size: var(--text-2xs); color: var(--gray-6); }
+.how-inline { max-width: 720px; }
+.how-inline li { padding: 8px 0; }
+
+/* Plays on the landing page — quiet grid, marks + outcome */
+.plays-intro { padding-top: 8px; padding-bottom: 48px; }
+.play-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.play-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-md); min-width: 0; transition: border-color var(--duration-fast) var(--ease-standard); }
+.play-card:hover { border-color: var(--border-strong); }
+.play-card .play-marks { margin-bottom: 4px; }
+.play-card-title { font-size: var(--text-sm); line-height: 18px; font-weight: var(--weight-medium); color: var(--gray-9); }
+.play-card-io { display: flex; gap: 8px; align-items: baseline; font-size: var(--text-xs); line-height: 16px; color: var(--gray-6); }
+.play-card-io .k { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: .06em; text-transform: uppercase; color: var(--gray-5); width: 28px; flex-shrink: 0; }
+
 /* Use-case card — the right column of the hero */
 .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); }
 .uses-card { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 8px; }
 .uses-card .uses { margin: 0; border-top: 0; }
 .uses-card .uses li:last-child { border-bottom: 0; }
+
+/* Agent strip — the setup prompt, one row, for when someone needs it again */
+.agent-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 6px; font-size: var(--text-xs); }
+.agent-strip .btn-md { gap: 6px; padding: 0 10px; }
 
 /* Agent card — step 1's launcher, mirrors the Freckle app's install panel */
 .agent-card { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 880px; }
@@ -146,7 +167,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 /* Step 2 — drag chip beside the how-to demo */
 .drag-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .drag-grid > div:first-child { display: flex; flex-direction: column; gap: 12px; }
-.dragbar { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 12px; border: 1px dashed var(--purple-3); border-radius: var(--radius-md); background: var(--purple-0); }
+.dragbar { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 12px; border: 1px dashed var(--purple-3); border-radius: var(--radius-md); background: var(--purple-0); }
 .bm-chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px 0 6px; border-radius: var(--radius-xs); background: #fff; border: 1px solid var(--border); font-family: var(--font-sans); font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--gray-9); white-space: nowrap; text-decoration: none; }
 .bm-chip img { width: 14px; height: 14px; display: block; }
 .bm-chip.hot { border-color: var(--purple-2); background: var(--purple-0); box-shadow: 0 0 0 2px var(--purple-0); }
@@ -155,7 +176,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .dragbar .bm-chip:hover { background: var(--primary-hover); color: #fff; text-decoration: none; }
 .dragbar .bm-chip:active { cursor: grabbing; transform: scale(.97); }
 .dragbar .bm-chip:focus-visible { outline: none; box-shadow: var(--shadow-input-outline); }
-.dragbar .hint { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: var(--tracking-mono); color: var(--purple-7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dragbar .hint { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-2xs); line-height: 14px; letter-spacing: var(--tracking-mono); color: var(--purple-7); min-width: 0; }
 .dragbar .grip { color: var(--purple-3); }
 .kbd-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--text-xs); color: var(--gray-6); }
 .kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--radius-xs); border: 1px solid var(--border-strong); background: var(--surface-card); font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--gray-7); }
@@ -208,7 +229,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 
 @media (max-width: 880px) {
   .wrap { padding: 0 var(--space-16); }
-  .hero { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 32px; padding-bottom: 24px; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 32px; padding-bottom: 24px; }
   .h1 { font-size: var(--text-3xl); line-height: 40px; }
   .uses li { white-space: normal; height: auto; padding: 8px 0; grid-template-columns: auto minmax(0, 1fr); }
   .uses .arrow { display: none; }
@@ -217,6 +238,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
   .step { grid-template-columns: 40px minmax(0, 1fr); gap: 0 14px; }
   .step-summary { display: none; }
   .drag-grid, .plays, .notes { grid-template-columns: minmax(0, 1fr); }
+  .play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .prompt-head { height: auto; padding: 8px 8px 8px 12px; flex-wrap: wrap; }
   .prompt-actions { margin-left: 0; width: 100%; flex-wrap: wrap; }
   .dragbar .hint { display: none; }
