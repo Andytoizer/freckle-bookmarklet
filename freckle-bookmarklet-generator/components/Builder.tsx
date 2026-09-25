@@ -136,7 +136,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
   // Mounted by a Get started choice, or by the agent's return link. Runs again if they pick another option.
   useEffect(() => {
     const t = setTimeout(() => {
-      setOpen(1);
+      if (initial.kind !== 'none') setOpen(1);
       scrollHere();
       if (initial.kind === 'agent') launch(initial.agent);
       if (initial.kind === 'copy') copyPrompt();
@@ -205,7 +205,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
             )}
           </Step>
 
-          <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the bookmark into your bookmarks bar"
+          <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the Send to Freckle button into your bookmarks bar"
                 summary={dragged ? 'Send to Freckle · in your bookmarks bar' : undefined} onOpen={() => ready && setOpen(2)}>
             <p className="step-help">Click and hold the purple chip, drag it up to the bookmarks bar just under your search bar, let go. It saves as <strong>Send to Freckle</strong> with your webhook already inside.</p>
             <div className="drag-grid">
@@ -239,7 +239,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
             </div>
           </Step>
 
-          <Step n="03" status={open === 3 ? 'open' : 'todo'} title="Use it, then add plays"
+          <Step n="03" status={open === 3 ? 'open' : 'todo'} title="Bookmark-driven playbooks"
                 onOpen={() => ready && setOpen(3)}>
             <ol className="how how-inline">
               <li><span className="mono n">1</span><span>On any page, click <strong>Send to Freckle</strong> in your bookmarks bar. A small window confirms and closes.</span></li>
@@ -252,21 +252,20 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                   <div className="play-head">
                     <span className="play-marks">{p.marks.map(m => <span key={m} className="play-mark"><img src={m} alt="" /></span>)}</span>
                     <span className="play-title">{p.title}</span>
-                    <button type="button" className="btn btn-secondary btn-md" onClick={() => copy(p.id, p.prompt)}>
-                      <Icon name="copy" size={12} /> {copied === p.id ? 'Copied' : 'Copy prompt'}
-                    </button>
                   </div>
                   <div className="play-io">
                     <span className="k">send</span><span>{p.send}</span>
                     <span className="k">get</span><span>{p.get}</span>
                   </div>
                   <pre className="play-prompt">{p.prompt}</pre>
+                  <div className="play-foot">
+                    <button type="button" className="btn btn-secondary btn-md" onClick={() => copy(p.id, p.prompt)}>
+                      <Icon name="copy" size={12} /> {copied === p.id ? 'Copied' : 'Copy prompt'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-            <p className="step-help" style={{ fontSize: 'var(--text-xs)' }}>
-              Freckle picks the data providers. On a Sales Navigator lead the bookmark sends the person's regular <span className="mono">linkedin.com/in/</span> URL, so the LinkedIn play matches either page.
-            </p>
           </Step>
         </div>
       </div>

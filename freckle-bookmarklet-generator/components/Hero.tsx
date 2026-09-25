@@ -58,19 +58,23 @@ const Hero: React.FC<HeroProps> = props => (
   <>
     <section className="wrap hero">
       <div className="hero-copy">
-        <div className="eyebrow mono"><span className="prompt">❯</span> bookmarklet</div>
-        <h1 className="h h1">One bookmark. Any page.<br />Into Freckle.</h1>
-        <p className="lede">
-          Keep <strong>Send to Freckle</strong> in your bookmarks bar. Click it on a LinkedIn profile, a CRM record or a company site, and that page lands in Freckle as a row, where a workflow your coding agent built enriches it and routes it wherever it needs to go.
-        </p>
+        <h1 className="h h1">
+          Send any page to Freckle<br />from your{' '}
+          <span className="h1-tiles">
+            <span className="tile claude-code"><img src={AGENTS['claude-code'].mark} alt="Claude Code" /></span>
+            <span className="tile codex"><img src={AGENTS.codex.mark} alt="Codex" /></span>
+          </span>{' '}
+          browser
+        </h1>
+        <p className="lede">The bookmarklet for GTM teams who build their workflows in coding agents</p>
         <div className="hero-actions">
           <GetStarted {...props} />
-          <span className="muted" style={{ fontSize: 'var(--text-xs)' }}>About a minute. No code to paste.</span>
+          <a className="btn btn-secondary" href="#plays">See the plays <Icon name="arrow-up-right" size={12} /></a>
         </div>
       </div>
     </section>
 
-    <section className="wrap plays-intro">
+    <section className="wrap plays-intro" id="plays">
       <div className="section-head">
         <h2 className="h h2">What you can enrich</h2>
       </div>
