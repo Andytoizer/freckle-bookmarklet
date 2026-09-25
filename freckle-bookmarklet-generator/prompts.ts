@@ -1,5 +1,6 @@
 // Prompts the page hands to a coding agent. One workflow, one webhook: the setup prompt
 // builds intake + a URL classifier; each play adds a branch for one URL type.
+// Prompts describe outcomes, not providers; Freckle picks the providers.
 
 export const SITE_URL = 'https://freckle-bookmarklet.vercel.app/';
 
@@ -52,52 +53,97 @@ ${RETURN_URL}`;
 
 export interface Play {
   id: string;
-  mark: string;
+  marks: string[];
   title: string;
   send: string;
   get: string;
   prompt: string;
 }
 
+const LI = '/ds/marks/linkedin.svg';
+const SF = '/ds/marks/salesforce.svg';
+const HS = '/ds/marks/hubspot.svg';
+const FR = '/ds/logos/stamp_black_full.svg';
+
 export const PLAYS: Play[] = [
   {
     id: 'person',
-    mark: '/ds/marks/linkedin.svg',
-    title: 'LinkedIn profile or Sales Navigator lead',
-    send: 'A person’s profile',
+    marks: [LI],
+    title: 'Enrich a LinkedIn profile',
+    send: 'A profile or Sales Navigator lead',
     get: 'Work email, mobile, title, company',
     prompt: `Add a branch for linkedin_profile.
 
-Enrich the person from the LinkedIn URL: name, title, company, location. Find their work email with Findymail, fall back to LeadMagic, verify with ZeroBounce. Find a mobile number. Write all of it back to the row.`,
+Enrich the person from the LinkedIn URL: name, title, company, location. Find and verify their work email, and find a mobile number. Write all of it back to the row.`,
   },
   {
     id: 'salesforce',
-    mark: '/ds/marks/salesforce.svg',
-    title: 'Salesforce lead or contact',
-    send: 'A record URL',
-    get: 'Empty email, phone and LinkedIn fields filled in',
+    marks: [SF],
+    title: 'Enrich a Salesforce record',
+    send: 'A lead or contact URL',
+    get: 'Missing email, phone and LinkedIn filled in',
     prompt: `Add a branch for salesforce_record.
 
-Pull the record ID out of the URL and read the Lead or Contact from Salesforce. For each empty email, phone or LinkedIn field, find it: LinkedIn via a person search, email via Findymail then LeadMagic (verified with ZeroBounce), phone via a mobile lookup. Write the results back to that Salesforce record. Never overwrite a field that already has a value.`,
+Pull the record ID out of the URL and read the lead or contact from Salesforce. For each empty email, phone or LinkedIn field, find it and write it back to that record. Never overwrite a field that already has a value.`,
   },
   {
     id: 'hubspot',
-    mark: '/ds/marks/hubspot.svg',
-    title: 'HubSpot contact or company',
-    send: 'A record URL',
-    get: 'The record enriched in place',
+    marks: [HS],
+    title: 'Enrich a HubSpot record',
+    send: 'A contact or company URL',
+    get: 'Missing fields filled in',
     prompt: `Add a branch for hubspot_record.
 
-Pull the record ID out of the URL and read the contact or company from HubSpot. Fill any empty email, phone, LinkedIn, title, or company-size fields using Findymail, LeadMagic, ZeroBounce and a company enrichment. Write the results back to that HubSpot record. Never overwrite a field that already has a value.`,
+Pull the record ID out of the URL and read the contact or company from HubSpot. Fill any empty email, phone, LinkedIn, title or company-size fields and write them back to that record. Never overwrite a field that already has a value.`,
   },
   {
-    id: 'company',
-    mark: '/ds/logos/stamp_black_full.svg',
-    title: 'Company website or LinkedIn company page',
-    send: 'A company',
-    get: 'Up to 5 ICP people there, with contact info',
+    id: 'icp-contacts',
+    marks: [FR, LI],
+    title: 'Find ICP contacts at a company',
+    send: 'A company website or LinkedIn page',
+    get: 'Up to 5 matching people, with contact info',
     prompt: `Add a branch for company_website and linkedin_company.
 
-Resolve the company (domain and LinkedIn page). Find up to 5 people there who match our ICP: titles like [VP Sales, Head of RevOps, GTM Engineer], manager and above. Find work emails with Findymail then LeadMagic, verified with ZeroBounce. Add them to a table called "Target personas" and post a one-line summary per person to Slack in [#new-accounts].`,
+Resolve the company (domain and LinkedIn page). Find up to 5 people there who match our ICP: titles like [VP Sales, Head of RevOps, GTM Engineer], manager and above. Find and verify their work emails. Add them to a table called "Target personas" and post a one-line summary per person to Slack in [#new-accounts].`,
+  },
+  {
+    id: 'icp-fit',
+    marks: [FR],
+    title: 'Score company ICP fit',
+    send: 'A company website or LinkedIn page',
+    get: 'A 1–10 fit score with reasons',
+    prompt: `Add a branch for company_website and linkedin_company.
+
+Enrich the company: industry, headcount, funding, tech stack, hiring signals. Score its fit against our ICP from 1 to 10 and write a two-sentence reason. Our ICP: [B2B SaaS, 50 to 500 employees, sells to sales or marketing teams, has a RevOps or GTM engineering function]. Write the score and reason to the row.`,
+  },
+  {
+    id: 'posts',
+    marks: [LI],
+    title: 'Pull recent posts and who engaged',
+    send: 'A person or company LinkedIn page',
+    get: 'Last 10 posts, plus the people who liked or commented',
+    prompt: `Add a branch for linkedin_profile and linkedin_company.
+
+Pull the last 10 LinkedIn posts from the page. For each post, capture the text, date and the people who liked or commented (name, title, company, profile URL). Store the engagers in a table called "Engagers" and flag any who match our ICP titles: [VP Sales, Head of RevOps, GTM Engineer].`,
+  },
+  {
+    id: 'first-touch',
+    marks: [LI, FR],
+    title: 'Draft a first-touch email',
+    send: 'A LinkedIn profile',
+    get: 'A three-line personalized email, ready to send',
+    prompt: `Extend the linkedin_profile branch.
+
+After enrichment, research the person and their company: recent posts, role changes, company news. Draft a three-line first-touch email in my voice that references one specific thing you found and asks for a 15-minute call. Write the draft to the row and post it to Slack in [#outbound-drafts] for review.`,
+  },
+  {
+    id: 'lookalikes',
+    marks: [FR],
+    title: 'Find lookalike companies',
+    send: 'A company website',
+    get: '10 similar companies, scored',
+    prompt: `Extend the company_website branch.
+
+Using the enriched company as the seed, find 10 companies that look like it: same industry, similar headcount and funding stage, similar tech stack. Score each for ICP fit from 1 to 10 and add them to a table called "Lookalikes" with domain, LinkedIn page, headcount and score.`,
   },
 ];

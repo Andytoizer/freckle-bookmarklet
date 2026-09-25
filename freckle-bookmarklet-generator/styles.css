@@ -162,7 +162,9 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .kbd-sep { color: var(--gray-4); }
 .nudge { font-size: var(--text-xs); color: var(--purple-7); }
 .desktop-only-note { display: none; font-size: var(--text-xs); line-height: 16px; color: var(--warning); }
-.drag-grid .btn-primary { align-self: flex-start; margin-top: 4px; }
+.drag-grid .confirm { align-self: flex-start; margin-top: 20px; }
+.btn-quiet { background: var(--surface-card); color: var(--gray-6); border-color: var(--border); }
+.btn-quiet:hover { background: var(--surface-hover); color: var(--gray-9); }
 
 /* Demo — mock browser chrome around the gif */
 .demo { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
@@ -182,6 +184,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .plays { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .play { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; }
 .play-head { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-bottom: 1px solid var(--border); }
+.play-marks { display: inline-flex; gap: 4px; flex-shrink: 0; }
 .play-mark { width: 24px; height: 24px; border-radius: var(--radius-sm); display: grid; place-items: center; background: var(--gray-0); border: 1px solid var(--border); flex-shrink: 0; }
 .play-mark img { width: 14px; height: 14px; display: block; }
 .play-title { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--gray-9); flex: 1; min-width: 0; }

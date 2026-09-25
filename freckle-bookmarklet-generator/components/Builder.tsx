@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
 import { buildBookmarklet, normalizeWebhook } from '../bookmarklet';
 import { AGENTS, PLAYS, SETUP_PROMPT, type Agent } from '../prompts';
@@ -21,10 +21,11 @@ const webhookFromUrl = (): string => {
   return w;
 };
 
-export interface BuilderHandle {
-  launch: (agent: Agent) => void;
-  copyPrompt: () => void;
-  skipToPaste: () => void;
+export type InitialAction = { kind: 'agent'; agent: Agent } | { kind: 'copy' } | { kind: 'paste' } | { kind: 'none' };
+
+interface BuilderProps {
+  // What the person picked from Get started; acted on once when the section mounts.
+  initial: InitialAction;
 }
 
 const useCopy = () => {
@@ -94,7 +95,7 @@ const Step: React.FC<StepProps> = ({ n, status, title, summary, onOpen, children
   </div>
 );
 
-const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
+const Builder: React.FC<BuilderProps> = ({ initial }) => {
   const [raw, setRaw] = useState(webhookFromUrl);
   const [notice, setNotice] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -105,7 +106,6 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
   const sectionRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chipRef = useRef<HTMLAnchorElement>(null);
-  const cameBack = useRef(raw !== '');
 
   const result = useMemo(() => check(raw), [raw]);
   const ready = result.state === 'ok';
@@ -124,11 +124,6 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
 
   const scrollHere = () => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Landed here from the agent's link: go straight to the drag step.
-  useEffect(() => {
-    if (cameBack.current) setTimeout(scrollHere, 300);
-  }, []);
-
   const focusPaste = () => setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
 
   const launch = (agent: Agent) => {
@@ -143,11 +138,17 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
     setNotice('Prompt copied. Paste it into any coding agent.');
   };
 
-  useImperativeHandle(ref, () => ({
-    launch: a => { setOpen(1); scrollHere(); launch(a); },
-    copyPrompt: () => { setOpen(1); scrollHere(); copyPrompt(); },
-    skipToPaste: () => { setOpen(1); scrollHere(); focusPaste(); },
-  }));
+  // Mounted by a Get started choice, or by the agent's return link. Runs again if they pick another option.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setOpen(1);
+      scrollHere();
+      if (initial.kind === 'agent') launch(initial.agent);
+      if (initial.kind === 'copy') copyPrompt();
+      if (initial.kind === 'paste') focusPaste();
+    }, 60);
+    return () => clearTimeout(t);
+  }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
   const promptLines = SETUP_PROMPT.split('\n');
@@ -214,7 +215,7 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
             </div>
           </Step>
 
-          <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the bookmark into your bar"
+          <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the bookmark into your bookmarks bar"
                 summary={dragged ? 'Send to Freckle · in your bookmarks bar' : undefined} onOpen={() => ready && setOpen(2)}>
             <p className="step-help">Click and hold the purple chip, drag it up to the bookmarks bar under your address field, let go. It saves as <strong>Send to Freckle</strong> with your webhook already inside.</p>
             <div className="drag-grid">
@@ -228,9 +229,9 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
                      onDragEnd={() => setDragged(true)}>
                     <img src="/ds/logos/stamp_black_full.svg" alt="" />Send to Freckle
                   </a>
-                  <span className="hint"><Icon name="arrow-up" size={12} /> drag me up there</span>
+                  <span className="hint"><Icon name="arrow-up" size={12} /> drag me up to your bookmarks bar</span>
                 </div>
-                {nudge && <span className="nudge">That's the bookmark itself. Drag it to the bar instead of clicking it here.</span>}
+                {nudge && <span className="nudge">That's the bookmark itself. Drag it up to your bookmarks bar instead of clicking it here.</span>}
                 <div className="kbd-row">
                   <span>Bookmarks bar hidden?</span>
                   <span className="kbd">⌘</span><span className="kbd">⇧</span><span className="kbd">B</span>
@@ -240,8 +241,8 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
                 <div className="kbd-row">
                   <span>Can't drag? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
                 </div>
-                <button type="button" className="btn btn-primary" onClick={() => { setDragged(true); setOpen(3); }}>
-                  <Icon name="check" size={16} /> It's in my bar
+                <button type="button" className={`btn confirm ${dragged ? 'btn-primary' : 'btn-quiet'}`} onClick={() => { setDragged(true); setOpen(3); }}>
+                  <Icon name="check" size={16} /> It's in my bookmarks bar
                 </button>
               </div>
               <DragDemo />
@@ -251,13 +252,13 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
           <Step n="03" status={open === 3 ? 'open' : 'todo'} title="Use it, then teach the workflow a play"
                 onOpen={() => ready && setOpen(3)}>
             <p className="step-help">
-              Open any page and click <strong>Send to Freckle</strong> in your bar. A small window confirms and closes itself; the URL is now a row. The workflow only classifies it so far. Each play below is a follow-up prompt for the <strong>same agent session</strong> that adds one branch. Edit the bracketed bits first.
+              Open any page and click <strong>Send to Freckle</strong> in your bookmarks bar. A small window confirms and closes itself; the URL is now a row. The workflow only classifies it so far. Each play below is a follow-up prompt for the <strong>same agent session</strong> that adds one branch. Edit the bracketed bits first; Freckle picks the data providers.
             </p>
             <div className="plays">
               {PLAYS.map(p => (
                 <div key={p.id} className="play">
                   <div className="play-head">
-                    <span className="play-mark"><img src={p.mark} alt="" /></span>
+                    <span className="play-marks">{p.marks.map(m => <span key={m} className="play-mark"><img src={m} alt="" /></span>)}</span>
                     <span className="play-title">{p.title}</span>
                     <button type="button" className="btn btn-secondary btn-md" onClick={() => copy(p.id, p.prompt)}>
                       <Icon name="copy" size={12} /> {copied === p.id ? 'Copied' : 'Copy prompt'}
@@ -279,8 +280,6 @@ const Builder = forwardRef<BuilderHandle, {}>((_, ref) => {
       </div>
     </section>
   );
-});
-
-Builder.displayName = 'Builder';
+};
 
 export default Builder;
