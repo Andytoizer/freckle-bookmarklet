@@ -8,6 +8,7 @@ const Footer: React.FC = () => (
       </a>
       <span className="cli">❯ npx freckle login</span>
       <nav className="links">
+        <a href="/rules">Build rules</a>
         <a href="https://www.freckle.io/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy</a>
         <a href="https://www.freckle.io/terms-of-service" target="_blank" rel="noopener noreferrer">Terms</a>
         <a href="https://www.freckle.io/dpa" target="_blank" rel="noopener noreferrer">DPA</a>

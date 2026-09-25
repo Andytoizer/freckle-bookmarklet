@@ -1,4 +1,4 @@
-// Freckle API client. Uses the same endpoints and token the Freckle CLI uses:
+// Freckle API client. Same endpoints and token as the Freckle CLI and the Rep MCP:
 // device sign-in at /v2/cli-device-auth, then the token in X-Api-Key plus an x-org-id header.
 
 export const API_BASE = 'https://next-api.freckle.io';
@@ -69,50 +69,47 @@ export async function waitForApproval(session, signal) {
   throw new FreckleError('Timed out waiting for approval. Start again.', 0);
 }
 
-// ── Orgs, workbooks, datasets ──────────────────────────────────────────────
+export async function whoami(token) {
+  return request('/v2/whoami', { token }); // { userId, email?, name? }
+}
 
 export async function listOrganizations(token) {
   const data = await request('/v2/cli/organizations', { token });
   return data.organizations || [];
 }
 
-export async function listWorkbooks(token, orgId) {
+// ── Workflows and runs ─────────────────────────────────────────────────────
+
+// Active workflows with their input/output shape, cost estimate, owner and metadata.
+export async function listWorkflows(token, orgId) {
   const all = [];
   let cursor;
   for (let page = 0; page < 20; page++) {
-    const data = await request('/v2/workbooks', { token, orgId, query: { limit: 100, cursor } });
-    all.push(...(data.workbooks || []));
+    const data = await request('/v2/workflows', { token, orgId, query: { limit: 100, cursor } });
+    all.push(...(data.workflows || []));
     if (!data.nextCursor) break;
     cursor = data.nextCursor;
   }
   return all.filter((w) => !w.archivedAt);
 }
 
-export async function listDatasetSources(token, orgId, workbookId, datasetId) {
-  const data = await request(`/v2/datasets/${datasetId}/sources`, { token, orgId, query: { workbookId } });
-  return data.sources || [];
+export async function getWorkflow(token, orgId, workflowId) {
+  return (await request(`/v2/workflows/${workflowId}`, { token, orgId })).workflow;
 }
 
-export async function createEntry(token, orgId, workbookId, datasetId, value) {
-  const data = await request(`/v2/datasets/${datasetId}/entries`, {
-    token, orgId, method: 'POST', query: { workbookId }, body: { value },
+// Freckle replaces the whole metadata object on update, so pass the merged object.
+export async function updateWorkflowMetadata(token, orgId, workflowId, metadata) {
+  return (await request(`/v2/workflows/${workflowId}`, { token, orgId, method: 'PATCH', body: { metadata } })).workflow;
+}
+
+// Returns { type: 'accepted', runId, … } or { type: 'rejected', errors }.
+export async function startRun(token, orgId, workflowId, inputs, metadata) {
+  return request(`/v2/workflows/${workflowId}/runs`, {
+    token, orgId, method: 'POST', body: { inputs, ...(metadata ? { metadata } : {}) },
   });
-  return data.entry;
 }
 
-export function normalizePointer(p) {
-  const s = String(p).trim();
-  return s.startsWith('/') ? s : '/' + s;
-}
-
-// Builds the row value for a JSON pointer like /linkedin_url or /person/profile_url.
-export function valueForPointer(pointer, url) {
-  const parts = normalizePointer(pointer).slice(1).split('/').map((p) => p.replace(/~1/g, '/').replace(/~0/g, '~'));
-  const root = {};
-  let node = root;
-  parts.forEach((key, i) => {
-    if (i === parts.length - 1) node[key] = url;
-    else node = node[key] = {};
-  });
-  return root;
+// { status: accepted|running|waiting|completed|failed|cancelled, outputs?, error?, creditsConsumed }
+export async function getRunData(token, orgId, runId) {
+  return request(`/v2/workflow-runs/${runId}/data`, { token, orgId });
 }

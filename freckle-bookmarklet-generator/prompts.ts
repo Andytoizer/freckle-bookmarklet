@@ -7,6 +7,7 @@ export const SITE_URL = 'https://freckle-bookmarklet.vercel.app/';
 // The agent is told to hand back this link with the webhook filled in; the page reads
 // the query string on load, validates it and opens step 2.
 export const RETURN_URL = `${SITE_URL}?webhook=<WEBHOOK_URL>`;
+export const RULES_URL = `${SITE_URL}rules`;
 
 export type Agent = 'claude-code' | 'codex' | 'cursor';
 
@@ -40,28 +41,18 @@ export const AGENTS: Record<Agent, AgentDef> = {
 
 export const SETUP_PROMPT = `Use Freckle to build a workflow that starts from a webhook. Name the workbook "Freckle bookmark".
 
-Each event is one page I send from my browser with the "Send to Freckle" bookmarklet. It has a single field: url.
+Each event is one page I send from my browser with the "Send to Freckle" bookmark. It has a single field: url.
 
 Build the minimum:
 1. A webhook-triggered workflow that stores each url as a row in a table.
 2. A Jev decision node that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else). Branch on that type with a Switch node.
 
-Don't add enrichment yet. I'll add a branch per type next. If you write any Code node, note Freckle Code nodes have no URL global; use string matching.
+Don't add enrichment yet. I'll add a branch per type next.
 
-Test it end to end with one real URL before you report back, then remove the test row.
+Read and follow ${RULES_URL} before you start and before you report back.
 
 When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
 ${RETURN_URL}`;
-
-// Appended to every copied play. Each line comes from a mistake an agent actually made while building these.
-export const PLAY_RULES = `Build rules:
-- Before wiring any provider node, inspect its contract in the node catalog and map every required input from a field that is actually populated at that point in the branch. A node that errors is set up wrong; fix the setup, don't work around it.
-- Run each new node on a real row and check its output before wiring the next one. Don't publish a branch with a node that hasn't returned real data.
-- Where Freckle offers more than one provider for a job (email, phone, mobile), build a waterfall: primary provider first, next provider only when the first returns nothing.
-- Freckle Code nodes have no URL global. Parse URLs with string matching, or let Jev extract what you need.
-- Only write CRM fields that were empty in a read taken right before the write. Never overwrite a value.
-- Reuse an enrichment chain that already exists in this org when it fits.
-- Tell me the estimated credits per URL for this branch.`;
 
 export interface Play {
   id: string;
