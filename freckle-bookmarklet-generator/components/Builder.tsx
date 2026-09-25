@@ -246,8 +246,12 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
               <li><span className="mono n">2</span><span>The URL lands as a row. For now the workflow only sorts it by type.</span></li>
               <li><span className="mono n">3</span><span>Pick a play. Paste its prompt into the <strong>same agent session</strong>. Edit the [bracketed] bits first.</span></li>
             </ol>
-            <div className="plays">
-              {PLAYS.map(p => (
+          </Step>
+        </div>
+
+        {open === 3 && (
+          <div className="plays">
+            {PLAYS.map(p => (
                 <div key={p.id} className="play">
                   <div className="play-head">
                     <span className="play-marks">{p.marks.map(m => <span key={m} className="play-mark"><img src={m} alt="" /></span>)}</span>
@@ -265,9 +269,8 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                   </div>
                 </div>
               ))}
-            </div>
-          </Step>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -58,14 +58,7 @@ const Hero: React.FC<HeroProps> = props => (
   <>
     <section className="wrap hero">
       <div className="hero-copy">
-        <h1 className="h h1">
-          Send any page to Freckle<br />from your{' '}
-          <span className="h1-tiles">
-            <span className="tile claude-code"><img src={AGENTS['claude-code'].mark} alt="Claude Code" /></span>
-            <span className="tile codex"><img src={AGENTS.codex.mark} alt="Codex" /></span>
-          </span>{' '}
-          browser
-        </h1>
+        <h1 className="h h1">Send any page to Freckle<br />from your browser</h1>
         <p className="lede">The bookmarklet for GTM teams who build their workflows in coding agents</p>
         <div className="hero-actions">
           <GetStarted {...props} />
