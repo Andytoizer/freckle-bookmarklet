@@ -59,10 +59,9 @@ const Hero: React.FC<HeroProps> = props => (
     <section className="wrap hero">
       <div className="hero-copy">
         <h1 className="h h1">Send any page to Freckle<br />from your browser</h1>
-        <p className="lede">The bookmarklet for GTM teams who build their workflows in coding agents</p>
+        <p className="lede">A bookmark that sends the page you're on into a Freckle workflow that enriches it, scores it and routes it.</p>
         <div className="hero-actions">
           <GetStarted {...props} />
-          <a className="btn btn-secondary" href="#plays">See the plays <Icon name="arrow-up-right" size={12} /></a>
         </div>
       </div>
     </section>
