@@ -6,7 +6,7 @@ import { ICONS } from './lib/icons.js';
 const $app = document.getElementById('app');
 
 const S = {
-  view: 'loading',        // loading | signin | org | main | settings | form
+  view: 'loading',        // loading | signin | org | main | settings
   auth: null,
   cache: null,
   defaults: {},
@@ -19,7 +19,9 @@ const S = {
   result: null,
   refreshing: false,
   error: null,
-  hidden: [],             // workflow ids this person unchecked
+  hidden: [],             // play ids this person unchecked
+  publishing: null,       // workflow id being published
+  publishError: null,
   shortcut: '',
 };
 
@@ -109,6 +111,7 @@ async function boot() {
   S.view = 'main';
   render();
   refresh({ quiet: !!S.cache });
+  for (const x of await core.resumeRunning()) core.follow(x.id);
 }
 
 // ── Views ──────────────────────────────────────────────────────────────────
@@ -127,7 +130,7 @@ function header({ title, back } = {}) {
     <span class="section-label">Org</span>
     <span class="title">${esc(orgName())}</span>
     ${S.refreshing ? `<span class="subtle" title="Refreshing">${icon('circle-dashed', 12, 'spin')}</span>` : ''}
-    <button class="icon-btn" data-action="open-settings" title="Workflows and settings" aria-label="Workflows and settings">${icon('settings', 16)}</button>
+    <button class="icon-btn" data-action="open-settings" title="Plays and settings" aria-label="Plays and settings">${icon('settings', 16)}</button>
   </header>`;
 }
 
@@ -198,82 +201,118 @@ function pageCard() {
   </div>`;
 }
 
-function destLine(t) {
-  if (!t) return '';
-  const trig = t.trigger === 'auto'
-    ? `<span class="dot dot-live"></span> runs automatically`
-    : t.trigger === 'manual'
-      ? `<span class="dot dot-wait"></span> waits for a manual run`
-      : `<span class="dot dot-none"></span> no workflow reads this dataset yet`;
-  return `<div class="dest">Adds a row to <span style="color:var(--text-body)">${esc(t.datasetLabel)}</span> · ${trig}</div>`;
+function credits(p) {
+  if (p.maxCredits === null || p.maxCredits === undefined) return '';
+  const n = Number(p.maxCredits.toFixed(2));
+  return `up to ${n} credit${n === 1 ? '' : 's'}${p.hasDynamicCost ? ' plus usage' : ''}`;
 }
 
-function statusBlock() {
+function playLine(p) {
+  if (!p) return '';
+  const bits = [p.returns, credits(p)].filter(Boolean).map(esc);
+  return bits.length ? `<div class="dest">${bits.join(' · ')}</div>` : '';
+}
+
+// Flattens run outputs into label/value rows a rep can read and copy.
+function outputRows(outputs) {
+  const rows = [];
+  const label = (k) => k.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+  const add = (k, v) => {
+    if (v === null || v === undefined || v === '') return;
+    if (Array.isArray(v)) rows.push([label(k), v.every((x) => typeof x !== 'object') ? v.join(', ') : `${v.length} item${v.length === 1 ? '' : 's'}`]);
+    else if (typeof v === 'object') for (const [k2, v2] of Object.entries(v)) { if (typeof v2 !== 'object' || v2 === null) add(k2, v2); }
+    else rows.push([label(k), String(v)]);
+  };
+  for (const [k, v] of Object.entries(outputs || {})) add(k, v);
+  return rows.slice(0, 14);
+}
+
+function resultBlock() {
   const r = S.result;
   if (!r) return '';
-  if (r.ok) {
-    return `<div class="status ok fade-in">${icon('circle-check-filled', 16)}<div class="body">
-      Sent to ${esc(r.target.name)}.
-      ${r.target.workbookUrl ? `<a href="${esc(r.target.workbookUrl)}" target="_blank">Open in Freckle</a>` : ''}
+  if (!r.ok) {
+    return `<div class="status err fade-in">${icon('circle-x-filled', 16)}<div class="body">${esc(r.error)}
+      ${r.needsLinkedIn ? `<div style="margin-top:var(--space-6)"><button class="linkbtn" data-action="grant">Allow LinkedIn access</button></div>` : ''}
     </div></div>`;
   }
-  return `<div class="status err fade-in">${icon('circle-x-filled', 16)}<div class="body">${esc(r.error)}
-    ${r.needsLinkedIn ? `<div style="margin-top:var(--space-6)"><button class="linkbtn" data-action="grant">Allow LinkedIn access</button></div>` : ''}
-  </div></div>`;
+  const item = S.history.find((x) => x.id === r.runId) || { status: 'running' };
+  const link = r.play.url ? `<a href="${esc(r.play.url)}" target="_blank">Open in Freckle</a>` : '';
+  if (item.status === 'running' || item.status === 'accepted' || item.status === 'waiting') {
+    return `<div class="status run fade-in">${icon('circle-dashed', 16, 'spin')}<div class="body">Running ${esc(r.play.name)}…
+      ${item.note ? `<div class="muted">${esc(item.note)}</div>` : ''}</div></div>`;
+  }
+  if (item.status === 'completed') {
+    const rows = outputRows(item.outputs);
+    return `<div class="result fade-in">
+      <div class="result-head">${icon('circle-check-filled', 16)}<span>${esc(r.play.name)} finished</span>${item.credits ? `<span class="when">${esc(item.credits)} cr</span>` : ''}</div>
+      ${rows.length ? `<dl class="outputs">${rows.map(([k, v], i) => `
+        <div class="out"><dt>${esc(k)}</dt><dd><span class="val">${esc(v)}</span>
+          <button class="icon-btn copy" data-action="copy" data-i="${i}" aria-label="Copy ${esc(k)}">${icon('copy', 12)}</button></dd></div>`).join('')}</dl>`
+        : `<p class="muted" style="padding:0 var(--space-12) var(--space-12)">Done. This play doesn't return anything to show here.</p>`}
+      <div class="result-foot">${link}</div>
+    </div>`;
+  }
+  return `<div class="status err fade-in">${icon('circle-x-filled', 16)}<div class="body">${esc(r.play.name)} ${esc(item.status)}. ${esc(item.error || '')} ${link}</div></div>`;
 }
 
 function sendBlock() {
   const url = S.tab?.url;
   const type = url && classify(url);
   if (!type) return '';
-  if (!S.cache) return `<div class="waiting">${icon('circle-dashed', 16, 'spin')} Finding workflows…</div>`;
-  const visible = S.cache.targets.filter((t) => !S.hidden.includes(t.id));
+  if (!S.cache?.plays) return `<div class="waiting">${icon('circle-dashed', 16, 'spin')} Loading plays…</div>`;
+  const visible = S.cache.plays.filter((p) => !S.hidden.includes(p.id));
   if (!visible.length) {
+    const ready = (S.cache.mine || []).filter((w) => w.ready && !w.settings?.enabled).length;
     return `<div class="callout">
-      <h3>No workflows take URLs in ${esc(orgName())} yet</h3>
-      <p>A workflow shows up here on its own once its workbook takes URLs through a webhook. Your coding agent can build one in a few minutes.</p>
-      <div><button class="btn btn-primary" data-action="build">Build one with your coding agent ${icon('arrow-up-right', 12)}</button></div>
+      <h3>No plays published in ${esc(orgName())} yet</h3>
+      <p>An operator publishes a workflow as a play, and it shows up here for everyone in the organization.</p>
+      ${ready ? `<div><button class="btn btn-primary" data-action="open-settings">Publish one of your workflows</button></div>` : ''}
     </div>`;
   }
-  const applicable = core.targetsFor(S.cache.targets, type, S.hidden);
+  const applicable = core.playsFor(S.cache.plays, type, S.hidden);
   if (!applicable.length) {
     return `<div class="callout">
-      <h3>No workflow takes ${esc(withArticle(type))} yet</h3>
-      <p>Workflows that take ${esc(withArticle(type))} show up here on their own.</p>
+      <h3>No play takes ${esc(withArticle(type))} yet</h3>
+      <p>Plays for ${esc(withArticle(type))} show up here once an operator publishes one.</p>
     </div>`;
   }
   const sel = core.pickDefault(applicable, S.defaults, type);
   return `<div class="send-block">
-    <label class="label" for="target" style="margin:0">Send to</label>
+    <label class="label" for="target" style="margin:0">Play</label>
     <div class="select-wrap">
       <select id="target" class="select select-lg" data-type="${type}">
-        ${applicable.map((t) => `<option value="${esc(t.id)}" ${t.id === sel.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
+        ${applicable.map((p) => `<option value="${esc(p.id)}" ${p.id === sel.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
       </select>
       <span class="chev">${icon('chevron-down', 16)}</span>
     </div>
-    ${destLine(sel)}
+    ${playLine(sel)}
     <button class="btn btn-primary btn-lg btn-block" data-action="send" ${S.sending ? 'disabled' : ''} style="margin-top:var(--space-8)">
-      ${S.sending ? `${icon('circle-dashed', 16, 'spin')} Sending…` : 'Send to Freckle'}
+      ${S.sending ? `${icon('circle-dashed', 16, 'spin')} Starting…` : 'Run'}
       ${S.shortcut && !S.sending ? `<span class="kbd">${esc(S.shortcut)}</span>` : ''}
     </button>
-    ${statusBlock()}
+    ${resultBlock()}
   </div>`;
 }
+
+const STATUS_ICON = { completed: ['ok', 'circle-check-filled'], failed: ['err', 'circle-x-filled'], cancelled: ['err', 'circle-x-filled'], rejected: ['err', 'circle-x-filled'], error: ['err', 'circle-x-filled'] };
 
 function recent() {
   const h = S.history.slice(0, 8);
   return `<section>
     <div class="section-label" style="margin-bottom:var(--space-6)">Recent</div>
-    ${h.length ? `<div class="list">${h.map((x) => `
-      <div class="row" title="${esc(x.ok ? x.url : x.error)}">
-        <span class="${x.ok ? 'ok' : 'err'}">${icon(x.ok ? 'circle-check-filled' : 'circle-x-filled', 12)}</span>
+    ${h.length ? `<div class="list">${h.map((x) => {
+      const [cls, ic] = STATUS_ICON[x.status] || ['subtle', 'circle-dashed'];
+      const line2 = x.status === 'completed' ? x.playName : x.error ? `${x.playName}: ${x.error}` : `${x.playName} · ${x.status}`;
+      return `<div class="row" title="${esc(x.url)}">
+        <span class="${cls}">${icon(ic, 12, cls === 'subtle' ? 'spin' : '')}</span>
         <div class="grow">
           <div class="line1">${esc(x.title || shortUrl(x.url))}</div>
-          <div class="line2">${x.ok ? esc(x.targetName) : esc(x.error)}</div>
+          <div class="line2">${esc(line2)}</div>
         </div>
         <span class="when">${ago(x.at)}</span>
-      </div>`).join('')}</div>`
-      : `<div class="empty-note">Nothing sent yet.</div>`}
+      </div>`;
+    }).join('')}</div>`
+      : `<div class="empty-note">No plays run yet.</div>`}
   </section>`;
 }
 
@@ -287,30 +326,64 @@ function viewMain() {
   </main>`;
 }
 
+const pagesLabel = (pages) => (pages.length ? pages.map((p) => PAGE_TYPES[p]?.label || p).join(', ') : 'Any page');
+
+function yourWorkflows() {
+  const mine = S.cache?.mine || [];
+  if (!mine.length) return '';
+  const ready = mine.filter((w) => w.ready);
+  const notReady = mine.length - ready.length;
+  return `<section>
+    <div class="section-label" style="margin-bottom:var(--space-6)">Your workflows</div>
+    ${ready.length ? `<div class="list">${ready.map((w) => {
+      const on = !!w.settings?.enabled;
+      const pages = Array.isArray(w.settings?.pages) ? w.settings.pages : [];
+      const busy = S.publishing === w.id;
+      return `<div class="pub">
+        <label class="row check" style="cursor:pointer">
+          <div class="grow">
+            <div class="line1" style="font-weight:var(--weight-medium)">${esc(w.label)}</div>
+            <div class="line2">${on ? `Published · ${esc(pagesLabel(pages))}` : 'Not published'}</div>
+          </div>
+          ${busy ? icon('circle-dashed', 12, 'spin') : ''}
+          <input type="checkbox" name="publish" value="${esc(w.id)}" ${on ? 'checked' : ''} ${busy ? 'disabled' : ''}>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+        ${on ? `<div class="chips-row">${Object.entries(PAGE_TYPES).map(([k, v]) => `
+          <label class="chip ${pages.includes(k) ? 'on' : ''}"><input type="checkbox" name="pub-page" data-wf="${esc(w.id)}" value="${k}" ${pages.includes(k) ? 'checked' : ''} ${busy ? 'disabled' : ''}>${marksFor(k, null, true)} ${esc(v.label)}</label>`).join('')}
+          <span class="hint" style="margin:0">None selected means any page.</span></div>` : ''}
+      </div>`;
+    }).join('')}</div>` : ''}
+    ${S.publishError ? `<div class="status err" style="margin-top:var(--space-8)">${icon('circle-x-filled', 16)}<div class="body">${esc(S.publishError)}</div></div>` : ''}
+    <p class="hint">Publishing makes a workflow a play for everyone in ${esc(orgName())}. Only workflows with a <span class="mono">url</span> input can be published.${notReady ? ` ${notReady} of yours need one first; the freckle-play skill can add it.` : ''}</p>
+  </section>`;
+}
+
 function viewSettings() {
-  const targets = S.cache?.targets || [];
+  const plays = S.cache?.plays || [];
   const orgs = [...(S.auth?.orgs || [])].sort((a, b) => a.name.localeCompare(b.name));
-  const pages = (t) => (t.pageTypes.length ? t.pageTypes.map((p) => PAGE_TYPES[p].label).join(', ') : 'Any page');
   return `${header({ title: 'Settings', back: 'back-main' })}
   <main class="main fade-in">
     <section>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6)">
-        <span class="section-label">Workflows in ${esc(orgName())}</span>
+        <span class="section-label">Plays in ${esc(orgName())}</span>
         <button class="linkbtn" data-action="refresh">Refresh</button>
       </div>
-      ${targets.length
-        ? `<div class="list">${targets.map((t) => `
+      ${plays.length
+        ? `<div class="list">${plays.map((p) => `
           <label class="row check" style="cursor:pointer">
             <div class="grow">
-              <div class="line1" style="font-weight:var(--weight-medium)">${esc(t.name)}</div>
-              <div class="line2">${esc(pages(t))} · ${t.trigger === 'auto' ? 'runs automatically' : 'waits for a manual run'}</div>
+              <div class="line1" style="font-weight:var(--weight-medium)">${esc(p.name)}</div>
+              <div class="line2">${esc([pagesLabel(p.pages), credits(p)].filter(Boolean).join(' · '))}</div>
             </div>
-            <input type="checkbox" name="show" value="${esc(t.id)}" ${S.hidden.includes(t.id) ? '' : 'checked'}>
+            <input type="checkbox" name="show" value="${esc(p.id)}" ${S.hidden.includes(p.id) ? '' : 'checked'}>
             <span class="box">${icon('check', 12)}</span>
           </label>`).join('')}</div>
-          <p class="hint">Found automatically: every workflow whose workbook takes URLs through a webhook. Uncheck any you don't want in your dropdown.</p>`
-        : `<div class="empty-note">None yet. A workflow shows up here on its own once its workbook takes URLs through a webhook.</div>`}
+          <p class="hint">Uncheck a play to hide it from your own dropdown.</p>`
+        : `<div class="empty-note">No plays published yet.</div>`}
     </section>
+
+    ${yourWorkflows()}
 
     <section>
       <div class="section-label" style="margin-bottom:var(--space-6)">Organization</div>
@@ -324,7 +397,7 @@ function viewSettings() {
 
     <section>
       <div class="section-label" style="margin-bottom:var(--space-6)">Keyboard shortcut</div>
-      <p class="hint" style="margin:0">${S.shortcut ? `<kbd>${esc(S.shortcut)}</kbd> sends the current page to its default workflow.` : 'No shortcut set.'}
+      <p class="hint" style="margin:0">${S.shortcut ? `<kbd>${esc(S.shortcut)}</kbd> runs the default play for the page you're on.` : 'No shortcut set.'}
         <button class="linkbtn" data-action="shortcuts">Change</button></p>
     </section>
 
@@ -334,7 +407,7 @@ function viewSettings() {
         ${S.perm.tabs && S.perm.linkedin ? '' : '<button class="linkbtn" data-action="grant">Allow</button>'}</p>
     </section>
   </main>
-  <footer class="foot"><div class="line">Signed in to Freckle. <button class="linkbtn" data-action="signout">Sign out</button></div></footer>`;
+  <footer class="foot"><div class="line">Signed in${S.auth?.me?.email ? ` as ${esc(S.auth.me.email)}` : ''}. <button class="linkbtn" data-action="signout">Sign out</button></div></footer>`;
 }
 
 let lastView = null;
@@ -388,16 +461,46 @@ async function grant() {
 
 async function doSend() {
   if (!S.tab || S.sending) return;
-  const targetId = document.getElementById('target')?.value;
+  const playId = document.getElementById('target')?.value;
   S.sending = true; S.result = null;
   render();
-  const r = await core.send(S.tab, targetId);
+  const r = await core.run(S.tab, playId);
   S.sending = false;
   if (r.signedOut) return expire();
   S.result = r;
   S.defaults = await core.getDefaults(S.auth.orgId);
   S.history = await core.getHistory();
   render();
+  if (r.ok) core.follow(r.runId); // history updates re-render the result as it lands
+}
+
+async function togglePublish(workflowId, patch) {
+  const w = S.cache.mine.find((x) => x.id === workflowId);
+  const current = w.settings || {};
+  const settings = {
+    enabled: current.enabled ?? false,
+    name: current.name || w.label,
+    pages: Array.isArray(current.pages) ? current.pages : [],
+    returns: current.returns || w.description || '',
+    ...patch,
+  };
+  S.publishing = workflowId; S.publishError = null;
+  render();
+  try {
+    S.cache = await core.publish(workflowId, settings);
+  } catch (e) {
+    if (e.status === 401) return expire();
+    S.publishError = e.message;
+  }
+  S.publishing = null;
+  render();
+}
+
+function copyOutput(i) {
+  const item = S.history.find((x) => x.id === S.result?.runId);
+  const row = outputRows(item?.outputs)[Number(i)];
+  if (!row) return;
+  navigator.clipboard.writeText(row[1]).catch(() => {});
 }
 
 $app.addEventListener('click', (e) => {
@@ -412,7 +515,7 @@ $app.addEventListener('click', (e) => {
   else if (a === 'refresh') refresh();
   else if (a === 'open-settings') { S.view = 'settings'; render(); }
   else if (a === 'back-main') { S.view = 'main'; render(); }
-  else if (a === 'build') chrome.tabs.create({ url: 'https://freckle-bookmarklet.vercel.app' });
+  else if (a === 'copy') copyOutput(el.dataset.i);
   else if (a === 'shortcuts') chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
   else if (a === 'signout') { core.signOut().then(() => { S.auth = null; S.cache = null; S.view = 'signin'; S.signin = null; render(); }); }
 });
@@ -429,6 +532,11 @@ $app.addEventListener('change', async (e) => {
   } else if (t.name === 'show') {
     await core.setHidden(S.auth.orgId, t.value, !t.checked);
     S.hidden = await core.getHidden(S.auth.orgId);
+  } else if (t.name === 'publish') {
+    togglePublish(t.value, { enabled: t.checked });
+  } else if (t.name === 'pub-page') {
+    const pages = [...document.querySelectorAll(`input[name="pub-page"][data-wf="${t.dataset.wf}"]:checked`)].map((x) => x.value);
+    togglePublish(t.dataset.wf, { pages });
   }
 });
 

@@ -1,6 +1,6 @@
 # Building the Freckle bookmark workflow
 
-The prompts on https://freckle-bookmarklet.vercel.app/ point here. Follow every rule below when you build the workflow or add a branch to it.
+Rules for a coding agent building or extending the Freckle bookmark workflow. Follow every rule below.
 
 ## 1. The workflow
 

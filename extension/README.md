@@ -14,16 +14,18 @@ After editing any file, click the reload arrow on the extension's card in `chrom
 ## How it ties to Freckle
 
 - **Sign-in** uses the same browser approval as `freckle login`. The extension gets a Freckle CLI token, keeps it in Chrome's local extension storage, and sends it in the `X-Api-Key` header with an `x-org-id` header.
-- **Workflows are found automatically.** Nothing to set up. A workflow appears in the dropdown when its intake dataset (feeds a workflow, isn't another workflow's output) has a webhook source keyed on a URL field like `/url` or `/linkedin_url`, or a webhook with no key on a dataset that has a URL field. Webhooks keyed on anything else, like an integration's `/reference_id`, are left out. Logic lives in `lib/discover.js`.
-- **The field decides which pages it's offered on.** `/url` takes any page. `linkedin` fields take LinkedIn profiles (or company pages if the name says company). `website` and `domain` fields take websites, and `domain` fields get the bare hostname. `hubspot` and `salesforce` fields take those records.
-- **Hiding** is per person, from the gear icon. Uncheck a workflow to drop it from your own dropdown.
-- **Sending** adds a row to the target dataset through Freckle's API, the same call as `freckle workbook dataset entry create`. No webhook URL is involved. If the dataset's workflow connection is set to **auto**, it runs on every send; if it's **manual**, rows wait. The panel shows which.
-
+- **Reps see plays, nothing else.** A play is a saved Freckle workflow that:
+  - takes a required string input `url` (optional `page_type` and `page_title`; no other required inputs), and
+  - has `repPlay` in its metadata: `{ "enabled": true, "name": "Find email and mobile", "pages": ["linkedin_profile"], "returns": "Work email and mobile, added to HubSpot" }`. An empty `pages` list means any page.
+  Workflows that don't meet both are invisible to the extension. Logic lives in `lib/plays.js`.
+- **Running a play** starts the workflow through Freckle's API, the same call the Rep MCP's `run_workflow` makes. The run carries `source: chrome-extension`, the rep's email and the page title in its run metadata. The panel follows the run and shows its outputs and the credits it used.
+- **Publishing** happens two ways. Operators use the `freckle-play` skill in Claude Code or Codex. Or a workflow's owner flips "Available to reps" in the panel's settings, where they can also pick page types. The extension merges the flag into the workflow's existing metadata, because Freckle replaces the whole metadata object on update, then reads it back to confirm.
+- **Hiding** is per person, from settings. Uncheck a play to drop it from your own dropdown.
 
 ## Using it
 
-- Each kind of page remembers the last workflow you picked, so after the first time it's one click.
-- `Alt+Shift+F` (`⌥⇧F` on Mac) sends the current page to its default without the panel. The icon badge shows ✓ or !. Change the shortcut at `chrome://extensions/shortcuts`.
+- Each kind of page remembers the last play you picked, so after the first time it's one click.
+- `Alt+Shift+F` (`⌥⇧F` on Mac) runs the default play for the current page without the panel. The icon badge shows … while it runs, then ✓ or !. Change the shortcut at `chrome://extensions/shortcuts`.
 - Sales Navigator leads are sent as the person's regular `linkedin.com/in/` URL. If the link isn't on the page, the extension opens the lead's "…" menu for up to 2 seconds to read it, then closes it.
 
 ## Permissions
@@ -36,8 +38,8 @@ After editing any file, click the reload arrow on the extension's card in `chrom
 - `manifest.json` — permissions, side panel, shortcut
 - `background.js` — opens the panel from the icon, handles the shortcut
 - `sidepanel.html` / `sidepanel.js` — the panel UI
-- `lib/freckle.js` — Freckle API client (sign-in, workbooks, datasets, entries)
-- `lib/discover.js` — finds sendable workflows in the org's workbooks
-- `lib/core.js` — shared send logic, per-page-type defaults, hidden workflows, recent sends
+- `lib/freckle.js` — Freckle API client (sign-in, workflows, runs, metadata)
+- `lib/plays.js` — the play contract: which workflows qualify and what inputs they get
+- `lib/core.js` — running and following plays, publishing, per-page-type defaults, recent runs
 - `lib/pages.js` — page-type detection, URL cleanup, the Sales Navigator reader
 - `lib/icons.js`, `assets/`, `styles/tokens.css` — Freckle design system assets; the icon is freckle.io's gradient stamp
