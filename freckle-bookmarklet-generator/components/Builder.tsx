@@ -128,8 +128,8 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
   }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
-  // Each play names the workflow by its webhook, so the prompt works even in a brand-new agent session.
-  const playPrompt = (prompt: string, display = false) => `In Freckle, open the workflow whose webhook URL is ${webhook ? (display ? short : webhook) : '<your webhook URL>'} (the "Send to Freckle" bookmark workflow).\n\n${prompt}`;
+  // Copied plays end with where they go and the webhook, so the prompt works even in a brand-new agent session.
+  const playPrompt = (p: { prompt: string; where: string }) => `${p.prompt}\n\n${p.where} in the Freckle workflow whose webhook URL is ${webhook || '<your webhook URL>'}.`;
 
   return (
     <section className="section" ref={sectionRef} id="setup">
@@ -255,9 +255,9 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                     <span className="k">send</span><span>{p.send}</span>
                     <span className="k">get</span><span>{p.get}</span>
                   </div>
-                  <pre className="play-prompt">{playPrompt(p.prompt, true)}</pre>
+                  <pre className="play-prompt">{p.prompt}</pre>
                   <div className="play-foot">
-                    <button type="button" className="btn btn-secondary btn-md" onClick={() => copy(p.id, playPrompt(p.prompt))}>
+                    <button type="button" className="btn btn-secondary btn-md" onClick={() => copy(p.id, playPrompt(p))}>
                       <Icon name="copy" size={12} /> {copied === p.id ? 'Copied' : 'Copy prompt'}
                     </button>
                   </div>

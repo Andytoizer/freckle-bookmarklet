@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Send to Freckle is installed</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/panel.css" />
+  <style>
+    body { background: var(--surface-sunken); }
+    .wrap { max-width: 520px; margin: var(--space-48) auto; padding: var(--space-32); background: var(--background); border: var(--border-hairline); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: var(--space-24); }
+    h1 { margin: 0; font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: var(--weight-medium); }
+    ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-16); counter-reset: s; }
+    li { display: grid; grid-template-columns: 24px 1fr; gap: var(--space-12); counter-increment: s; }
+    li::before { content: counter(s, decimal-leading-zero); font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--text-muted); padding-top: var(--space-2); }
+    li b { font-weight: var(--weight-medium); display: block; margin-bottom: var(--space-2); }
+    li p { margin: 0; color: var(--text-muted); max-width: 65ch; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img src="assets/logos/logo_black_full.svg" alt="freckle_" style="height:20px;width:auto;align-self:flex-start">
+    <h1>Send to Freckle is installed</h1>
+    <ol>
+      <li><div><b>Pin it</b><p>Click the puzzle piece next to the address bar, then the pin beside Send to Freckle.</p></div></li>
+      <li><div><b>Open the side panel and sign in</b><p>Clicking the icon opens it. It stays open while you move between pages.</p></div></li>
+      <li><div><b>Send pages</b><p>Pick a workflow once per kind of page. After that it's one click, or <kbd id="sc">Alt+Shift+F</kbd> from any tab.</p></div></li>
+    </ol>
+    <div><button class="btn btn-primary btn-lg" id="open">Open the side panel</button></div>
+  </div>
+  <script src="welcome.js"></script>
+</body>
+</html>

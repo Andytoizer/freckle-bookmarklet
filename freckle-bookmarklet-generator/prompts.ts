@@ -57,7 +57,10 @@ export interface Play {
   title: string;
   send: string;
   get: string;
+  // What people read on the card.
   prompt: string;
+  // Appended on copy, followed by the webhook, so the agent knows where this goes.
+  where: string;
 }
 
 const LI = '/ds/marks/linkedin.svg';
@@ -69,82 +72,74 @@ const SN = '/ds/marks/sales-navigator.png';
 export const PLAYS: Play[] = [
   {
     id: 'person',
+    where: 'Add this as a branch for linkedin_profile',
     marks: [LI, SN],
     title: 'Enrich a LinkedIn profile',
     send: 'A profile or Sales Navigator lead',
     get: 'Work email, mobile, title, company',
-    prompt: `Add a branch for linkedin_profile.
-
-Enrich the person from the LinkedIn URL: name, title, company, location. Find and verify their work email, and find a mobile number. Write all of it back to the row.`,
+    prompt: `Enrich the person from the LinkedIn URL: name, title, company, location. Find and verify their work email, and find a mobile number. Write all of it back to the row.`,
   },
   {
     id: 'salesforce',
+    where: 'Add this as a branch for salesforce_record',
     marks: [SF],
     title: 'Enrich a Salesforce record',
     send: 'A lead, contact or company URL',
     get: 'Missing email, phone and LinkedIn filled in',
-    prompt: `Add a branch for salesforce_record.
-
-Pull the record ID out of the URL and read the lead or contact from Salesforce. For each empty email, phone or LinkedIn field, find it and write it back to that record. Never overwrite a field that already has a value.`,
+    prompt: `Pull the record ID out of the URL and read the lead or contact from Salesforce. For each empty email, phone or LinkedIn field, find it and write it back to that record. Never overwrite a field that already has a value.`,
   },
   {
     id: 'hubspot',
+    where: 'Add this as a branch for hubspot_record',
     marks: [HS],
     title: 'Enrich a HubSpot record',
     send: 'A lead, contact or company URL',
     get: 'Missing email, phone and LinkedIn filled in',
-    prompt: `Add a branch for hubspot_record.
-
-Pull the record ID out of the URL and read the contact or company from HubSpot. Fill any empty email, phone, LinkedIn, title or company-size fields and write them back to that record. Never overwrite a field that already has a value.`,
+    prompt: `Pull the record ID out of the URL and read the contact or company from HubSpot. Fill any empty email, phone, LinkedIn, title or company-size fields and write them back to that record. Never overwrite a field that already has a value.`,
   },
   {
     id: 'icp-contacts',
+    where: 'Add this as a branch for company_website and linkedin_company',
     marks: [WEB, LI, SN],
     title: 'Find ICP contacts at a company',
     send: 'A company website or LinkedIn page',
     get: 'Up to 5 matching people, with contact info',
-    prompt: `Add a branch for company_website and linkedin_company.
-
-Resolve the company (domain and LinkedIn page). Find up to 5 people there who match our ICP: titles like [VP Sales, Head of RevOps, GTM Engineer], manager and above. Find and verify their work emails. Add them to a table called "Target personas" and post a one-line summary per person to Slack in [#new-accounts].`,
+    prompt: `Resolve the company (domain and LinkedIn page). Find up to 5 people there who match our ICP: titles like [VP Sales, Head of RevOps, GTM Engineer], manager and above. Find and verify their work emails. Add them to a table called "Target personas" and post a one-line summary per person to Slack in [#new-accounts].`,
   },
   {
     id: 'icp-fit',
+    where: 'Add this as a branch for company_website and linkedin_company',
     marks: [WEB, LI, SN],
     title: 'Score company ICP fit',
     send: 'A company website or LinkedIn page',
     get: 'A 1–10 fit score with reasons',
-    prompt: `Add a branch for company_website and linkedin_company.
-
-Enrich the company: industry, headcount, funding, tech stack, hiring signals. Score its fit against our ICP from 1 to 10 and write a two-sentence reason. Our ICP: [B2B SaaS, 50 to 500 employees, sells to sales or marketing teams, has a RevOps or GTM engineering function]. Write the score and reason to the row.`,
+    prompt: `Enrich the company: industry, headcount, funding, tech stack, hiring signals. Score its fit against our ICP from 1 to 10 and write a two-sentence reason. Our ICP: [B2B SaaS, 50 to 500 employees, sells to sales or marketing teams, has a RevOps or GTM engineering function]. Write the score and reason to the row.`,
   },
   {
     id: 'posts',
+    where: 'Add this as a branch for linkedin_profile and linkedin_company',
     marks: [LI, SN],
     title: 'Pull recent posts and who engaged',
     send: 'A person or company LinkedIn page',
     get: 'Last 10 posts, plus the people who liked or commented',
-    prompt: `Add a branch for linkedin_profile and linkedin_company.
-
-Use the Harvest API actors on Apify to pull the last 10 LinkedIn posts from the page and to scrape the people who reacted to or commented on each one. For each post capture the text and date; for each engager capture name, title, company and profile URL. Store the engagers in a table called "Engagers" and flag any who match our ICP titles: [VP Sales, Head of RevOps, GTM Engineer].`,
+    prompt: `Use the Harvest API actors on Apify to pull the last 10 LinkedIn posts from the page and to scrape the people who reacted to or commented on each one. For each post capture the text and date; for each engager capture name, title, company and profile URL. Store the engagers in a table called "Engagers" and flag any who match our ICP titles: [VP Sales, Head of RevOps, GTM Engineer].`,
   },
   {
     id: 'first-touch',
+    where: 'Add this to the linkedin_profile branch, after the enrichment step',
     marks: [LI, SN],
     title: 'Draft a first-touch email',
     send: 'A LinkedIn profile',
     get: 'A three-line personalized email, ready to send',
-    prompt: `Extend the linkedin_profile branch.
-
-After enrichment, research the person and their company: recent posts, role changes, company news. Draft a three-line first-touch email in my voice that references one specific thing you found and asks for a 15-minute call. Write the draft to the row and post it to Slack in [#outbound-drafts] for review.`,
+    prompt: `After enrichment, research the person and their company: recent posts, role changes, company news. Draft a three-line first-touch email in my voice that references one specific thing you found and asks for a 15-minute call. Write the draft to the row and post it to Slack in [#outbound-drafts] for review.`,
   },
   {
     id: 'lookalikes',
+    where: 'Add this to the company_website branch, after the enrichment step',
     marks: [WEB, LI, SN],
     title: 'Find lookalike companies',
     send: 'A company website',
     get: '10 similar companies, scored',
-    prompt: `Extend the company_website branch.
-
-Using the enriched company as the seed, find 10 companies that look like it: same industry, similar headcount and funding stage, similar tech stack. Score each for ICP fit from 1 to 10 and add them to a table called "Lookalikes" with domain, LinkedIn page, headcount and score.`,
+    prompt: `Using the enriched company as the seed, find 10 companies that look like it: same industry, similar headcount and funding stage, similar tech stack. Score each for ICP fit from 1 to 10 and add them to a table called "Lookalikes" with domain, LinkedIn page, headcount and score.`,
   },
 ];
