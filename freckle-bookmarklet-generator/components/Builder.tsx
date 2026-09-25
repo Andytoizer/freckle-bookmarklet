@@ -187,7 +187,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
               <span className="mono subtle">need the setup prompt?</span>
               {(Object.keys(AGENTS) as Agent[]).map(a => (
                 <button key={a} type="button" className="btn btn-secondary btn-md" onClick={() => launch(a)}>
-                  <img className="mini-mark" src={AGENTS[a].mark} alt="" />{AGENTS[a].name}{AGENTS[a].link && <Icon name="arrow-up-right" size={12} color="var(--gray-5)" />}
+                  <img className="mini-mark" src={AGENTS[a].mark} alt="" />{AGENTS[a].name}<Icon name="arrow-up-right" size={12} color="var(--gray-5)" />
                 </button>
               ))}
               <button type="button" className="btn btn-secondary btn-md" onClick={copyPrompt}>
