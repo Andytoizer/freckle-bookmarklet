@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
 import { buildBookmarklet, normalizeWebhook } from '../bookmarklet';
-import { AGENTS, PLAYS, RULES_URL, SETUP_PROMPT, type Agent } from '../prompts';
-
-const WEBHOOK_RE = /^https:\/\/next-api\.freckle\.io\/v2\/dataset-webhooks\/[^/\s]+\/[^/\s]+$/i;
+import { AGENTS, DEFAULT_NAME, PLAYS, RULES_URL, SETUP_PROMPT, WEBHOOK_RE, type Agent } from '../prompts';
+import DragStep from './DragStep';
+import ShareModal from './ShareModal';
 
 type Check = { state: 'idle' | 'ok' | 'bad'; fixed: boolean };
 
@@ -39,13 +39,6 @@ const useCopy = () => {
   return { copied, copy };
 };
 
-// The how-to recording (public/drag-demo.gif) sits beside the button. It carries its own browser frame.
-const DragDemo: React.FC = () => (
-  <div className="demo">
-    <img className="demo-gif" src="/drag-demo.gif" alt="Dragging the Send to Freckle button into the bookmarks bar" />
-  </div>
-);
-
 interface StepProps {
   n: string;
   status: 'open' | 'done' | 'todo';
@@ -78,22 +71,15 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [open, setOpen] = useState<1 | 2 | 3>(1);
   const [dragged, setDragged] = useState(false);
-  const [nudge, setNudge] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
+  const [share, setShare] = useState(false);
   const { copied, copy } = useCopy();
   const sectionRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const chipRef = useRef<HTMLAnchorElement>(null);
 
   const result = useMemo(() => check(raw), [raw]);
   const ready = result.state === 'ok';
   const webhook = ready ? normalizeWebhook(raw) : '';
   const code = useMemo(() => (ready ? buildBookmarklet(raw) : ''), [ready, raw]);
-
-  // React refuses javascript: URLs in href, so the bookmarklet is set on the DOM node directly.
-  useEffect(() => {
-    chipRef.current?.setAttribute('href', code || '#');
-  }, [code, open]);
 
   // Advance as soon as the webhook is valid.
   useEffect(() => {
@@ -191,46 +177,8 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
 
           <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the Send to Freckle button into your bookmarks bar"
                 summary={dragged ? 'Send to Freckle · in your bookmarks bar' : undefined} onOpen={() => ready && setOpen(2)}>
-            <div className="drag-grid">
-              <div className="drag-col">
-                <p className="step-help">Click and hold the <strong>Send to Freckle</strong> bookmark, drag it up into the bookmarks bar under your search bar, let go.</p>
-                <span className="desktop-only-note">Bookmarks bars are a desktop thing. Open this page in Chrome, Edge, Safari or Firefox on your computer to install it.</span>
-                <div className="dragbar">
-                  <span className="grip"><Icon name="grip-vertical" size={16} /></span>
-                  <a ref={chipRef} className="bm-chip" draggable title="Send to Freckle"
-                     onClick={e => { e.preventDefault(); setNudge(true); }}
-                     onDragStart={() => setNudge(false)}
-                     onDragEnd={() => setDragged(true)}>
-                    <img src="/ds/logos/stamp_black_full.svg" alt="" />Send to Freckle
-                  </a>
-                  <span className="hint"><Icon name="arrow-up" size={12} /><span>drag me to your bookmarks bar</span></span>
-                </div>
-                {nudge && <span className="nudge">That's the bookmark itself. Drag it up to your bookmarks bar instead of clicking it here.</span>}
-                {dragged && (
-                  <button type="button" className="btn btn-primary confirm" onClick={() => setOpen(3)}>
-                    <Icon name="check" size={16} /> It's in my bookmarks bar
-                  </button>
-                )}
-                <button type="button" className="linkbtn help-toggle" onClick={() => setShowHelp(h => !h)}>{showHelp ? 'Hide help' : 'Bookmark not showing up?'}</button>
-                {showHelp && (
-                  <>
-                    <div className="kbd-row">
-                      <span>Bookmarks bar hidden?</span>
-                      <span className="kbd">⌘</span><span className="kbd">⇧</span><span className="kbd">B</span>
-                      <span className="kbd-sep">/</span>
-                      <span className="kbd">Ctrl</span><span className="kbd">⇧</span><span className="kbd">B</span>
-                    </div>
-                    <div className="kbd-row">
-                      <span>Dragging didn't take? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
-                    </div>
-                    <div className="kbd-row">
-                      <span>Already dragged it? <button type="button" className="linkbtn" onClick={() => { setDragged(true); setOpen(3); }}>Continue to plays</button></span>
-                    </div>
-                  </>
-                )}
-              </div>
-              <DragDemo />
-            </div>
+            <DragStep code={code} name={DEFAULT_NAME} dragged={dragged} onDragged={() => setDragged(true)}
+                      onConfirm={() => setOpen(3)} continueLabel="Continue to plays" />
           </Step>
 
           <Step n="03" status={open === 3 ? 'open' : 'todo'} title="Bookmark-driven playbooks"
@@ -240,6 +188,15 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
               <li><span className="mono n">2</span><span>The URL lands as a row. For now the workflow only sorts it by type.</span></li>
               <li><span className="mono n">3</span><span>Pick a play. Paste its prompt into the <strong>same agent session</strong>. Edit the [bracketed] bits first.</span></li>
             </ol>
+            <div className="share-row">
+              <div>
+                <span className="share-title">Give the bookmark to your team</span>
+                <span className="share-sub">Teammates get a page with just the bookmark to drag in. Nothing to set up on their end.</span>
+              </div>
+              <button type="button" className="btn btn-secondary" onClick={() => setShare(true)}>
+                <Icon name="link" size={16} /> Share with teammates
+              </button>
+            </div>
           </Step>
         </div>
 
@@ -266,6 +223,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
           </div>
         )}
       </div>
+      {share && <ShareModal webhook={webhook} onClose={() => setShare(false)} />}
     </section>
   );
 };

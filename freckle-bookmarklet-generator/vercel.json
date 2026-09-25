@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/rules", "destination": "/rules.md" },
-    { "source": "/setup", "destination": "/setup.md" }
+    { "source": "/setup", "destination": "/setup.md" },
+    { "source": "/install", "destination": "/index.html" }
   ]
 }

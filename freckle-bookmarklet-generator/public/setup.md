@@ -75,8 +75,15 @@ Wait for the run to show `completed`, then confirm the output dataset row has `t
 
 ## 6. Hand back
 
-1. Copy WEBHOOK to the clipboard: `printf '%s' "WEBHOOK" | pbcopy` (macOS).
-2. Give the user this link with WEBHOOK URL-encoded into it: `https://freckle-bookmarklet.vercel.app/?webhook=<WEBHOOK>`
-3. Also give the workbook link from step 1.
+Copy WEBHOOK to the clipboard: `printf '%s' "WEBHOOK" | pbcopy` (macOS).
 
-That's the whole setup. Plays come later as separate prompts.
+Then end your message with this, word for word, filling in the two links. The person is not finished when you are: they still have to install the bookmark, and that happens on the link. Don't describe the setup as complete or add other suggestions after it.
+
+```
+The workflow is built and tested. One more step, and it's not done until you do it:
+
+**Next: open this link to install the bookmark.** It walks you through dragging it into your bookmarks bar, then shows the plays you can add.
+https://freckle-bookmarklet.vercel.app/?webhook=<WEBHOOK URL-encoded>
+
+Your workbook: <workbook link>
+```

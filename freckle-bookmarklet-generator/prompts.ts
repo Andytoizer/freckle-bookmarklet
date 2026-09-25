@@ -41,12 +41,19 @@ export const AGENTS: Record<Agent, AgentDef> = {
 
 export const SETUP_URL = `${SITE_URL}setup`;
 
+export const DEFAULT_NAME = 'Send to Freckle';
+export const WEBHOOK_RE = /^https:\/\/next-api\.freckle\.io\/v2\/dataset-webhooks\/[^/\s]+\/[^/\s]+$/i;
+
+// Teammate link: a page with only the bookmark to drag in. The webhook rides along in the query string.
+export const installUrl = (webhook: string, name: string): string =>
+  `${SITE_URL}install?webhook=${encodeURIComponent(webhook)}&name=${encodeURIComponent(name)}`;
+
 
 export const SETUP_PROMPT = `Set up the Freckle bookmark workflow for me.
 
 Follow ${SETUP_URL} exactly, step by step, using the Freckle CLI. The workflow itself is already written and validated; you're creating the workbook, the webhook, and the connection, then testing it.
 
-When it's done, copy the webhook URL to my clipboard and give me the link back to ${SITE_URL} with the webhook filled in, as the last step describes.`;
+When it's done, copy the webhook URL to my clipboard and hand back exactly what the last step says: the link to ${SITE_URL} with the webhook filled in, labelled as my next step. That link is where I install the bookmark; the setup isn't finished until I've opened it.`;
 
 export interface Play {
   id: string;
