@@ -194,6 +194,7 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 
 /* Demo — mock browser chrome around the gif */
 .demo { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.demo-gif { display: block; width: 100%; height: auto; }
 .chrome-bar { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-bottom: 1px solid var(--border); background: var(--gray-0); }
 .chrome-dots { display: flex; gap: 5px; }
 .chrome-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-3); }

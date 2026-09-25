@@ -39,9 +39,17 @@ const useCopy = () => {
   return { copied, copy };
 };
 
-// Demo slot for step 2. Drop the recording at public/drag-demo.gif and it replaces the placeholder.
+// Demo for step 2. The recording at public/drag-demo.gif carries its own browser frame, so it shows alone;
+// until it exists, a mock frame with a placeholder stands in.
 const DragDemo: React.FC = () => {
   const [hasGif, setHasGif] = useState(true);
+  if (hasGif) {
+    return (
+      <div className="demo">
+        <img className="demo-gif" src="/drag-demo.gif" alt="Dragging the Send to Freckle button into the bookmarks bar" onError={() => setHasGif(false)} />
+      </div>
+    );
+  }
   return (
     <div className="demo">
       <div className="chrome-bar">
@@ -54,13 +62,7 @@ const DragDemo: React.FC = () => {
         <span className="bm-chip hot"><img src="/ds/logos/stamp_black_full.svg" alt="" />Send to Freckle</span>
         <span className="bm-ghost w3" />
       </div>
-      <div className="gif-slot">
-        {hasGif ? (
-          <img src="/drag-demo.gif" alt="Dragging the Send to Freckle chip into the bookmarks bar" onError={() => setHasGif(false)} />
-        ) : (
-          <span className="label">how-to gif · coming soon</span>
-        )}
-      </div>
+      <div className="gif-slot"><span className="label">how-to gif · coming soon</span></div>
     </div>
   );
 };
