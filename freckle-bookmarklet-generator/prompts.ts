@@ -53,10 +53,11 @@ Test it end to end with one real URL before you report back, then remove the tes
 When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
 ${RETURN_URL}`;
 
-// Appended to every copied play. Each line is a failure an agent actually hit while building these.
+// Appended to every copied play. Each line comes from a mistake an agent actually made while building these.
 export const PLAY_RULES = `Build rules:
-- Optional lookups (phone, mobile, email verification, posts) must never block the branch. If a provider fails or returns nothing, leave that field blank and let the run complete.
-- If a provider node fails twice, swap in a different provider for the same job rather than retrying again.
+- Before wiring any provider node, inspect its contract in the node catalog and map every required input from a field that is actually populated at that point in the branch. A node that errors is set up wrong; fix the setup, don't work around it.
+- Run each new node on a real row and check its output before wiring the next one. Don't publish a branch with a node that hasn't returned real data.
+- Where Freckle offers more than one provider for a job (email, phone, mobile), build a waterfall: primary provider first, next provider only when the first returns nothing.
 - Freckle Code nodes have no URL global. Parse URLs with string matching, or let Jev extract what you need.
 - Only write CRM fields that were empty in a read taken right before the write. Never overwrite a value.
 - Reuse an enrichment chain that already exists in this org when it fits.
