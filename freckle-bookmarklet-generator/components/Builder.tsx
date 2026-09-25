@@ -39,33 +39,12 @@ const useCopy = () => {
   return { copied, copy };
 };
 
-// Demo for step 2. The recording at public/drag-demo.gif carries its own browser frame, so it shows alone;
-// until it exists, a mock frame with a placeholder stands in.
-const DragDemo: React.FC = () => {
-  const [hasGif, setHasGif] = useState(true);
-  if (hasGif) {
-    return (
-      <div className="demo">
-        <img className="demo-gif" src="/drag-demo.gif" alt="Dragging the Send to Freckle button into the bookmarks bar" onError={() => setHasGif(false)} />
-      </div>
-    );
-  }
-  return (
-    <div className="demo">
-      <div className="chrome-bar">
-        <div className="chrome-dots"><span /><span /><span /></div>
-        <div className="chrome-url">linkedin.com/sales/lead/ACwAABWPEl0…</div>
-      </div>
-      <div className="chrome-bookmarks">
-        <span className="bm-ghost w2" />
-        <span className="bm-ghost" />
-        <span className="bm-chip hot"><img src="/ds/logos/stamp_black_full.svg" alt="" />Send to Freckle</span>
-        <span className="bm-ghost w3" />
-      </div>
-      <div className="gif-slot"><span className="label">how-to gif · coming soon</span></div>
-    </div>
-  );
-};
+// The how-to recording (public/drag-demo.gif) sits beside the button. It carries its own browser frame.
+const DragDemo: React.FC = () => (
+  <div className="demo">
+    <img className="demo-gif" src="/drag-demo.gif" alt="Dragging the Send to Freckle button into the bookmarks bar" />
+  </div>
+);
 
 interface StepProps {
   n: string;
@@ -100,6 +79,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
   const [open, setOpen] = useState<1 | 2 | 3>(1);
   const [dragged, setDragged] = useState(false);
   const [nudge, setNudge] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const { copied, copy } = useCopy();
   const sectionRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -209,9 +189,9 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
 
           <Step n="02" status={open === 2 ? 'open' : dragged ? 'done' : 'todo'} title="Drag the Send to Freckle button into your bookmarks bar"
                 summary={dragged ? 'Send to Freckle · in your bookmarks bar' : undefined} onOpen={() => ready && setOpen(2)}>
-            <p className="step-help">Click and hold the purple chip, drag it up to the bookmarks bar just under your search bar, let go. It saves as <strong>Send to Freckle</strong> with your webhook already inside.</p>
             <div className="drag-grid">
-              <div>
+              <div className="drag-col">
+                <p className="step-help">Click and hold the purple button, drag it up into the bookmarks bar under your search bar, let go.</p>
                 <span className="desktop-only-note">Bookmarks bars are a desktop thing. Open this page in Chrome, Edge, Safari or Firefox on your computer to install it.</span>
                 <div className="dragbar">
                   <span className="grip"><Icon name="grip-vertical" size={16} /></span>
@@ -224,18 +204,23 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
                   <span className="hint"><Icon name="arrow-up" size={12} /><span>drag me to your bookmarks bar</span></span>
                 </div>
                 {nudge && <span className="nudge">That's the bookmark itself. Drag it up to your bookmarks bar instead of clicking it here.</span>}
-                <div className="kbd-row">
-                  <span>Bookmarks bar hidden?</span>
-                  <span className="kbd">⌘</span><span className="kbd">⇧</span><span className="kbd">B</span>
-                  <span className="kbd-sep">/</span>
-                  <span className="kbd">Ctrl</span><span className="kbd">⇧</span><span className="kbd">B</span>
-                </div>
-                <div className="kbd-row">
-                  <span>Can't drag? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
-                </div>
                 <button type="button" className={`btn confirm ${dragged ? 'btn-primary' : 'btn-quiet'}`} onClick={() => { setDragged(true); setOpen(3); }}>
                   <Icon name="check" size={16} /> It's in my bookmarks bar
                 </button>
+                <button type="button" className="linkbtn help-toggle" onClick={() => setShowHelp(h => !h)}>{showHelp ? 'Hide help' : 'Trouble dragging?'}</button>
+                {showHelp && (
+                  <>
+                    <div className="kbd-row">
+                      <span>Bookmarks bar hidden?</span>
+                      <span className="kbd">⌘</span><span className="kbd">⇧</span><span className="kbd">B</span>
+                      <span className="kbd-sep">/</span>
+                      <span className="kbd">Ctrl</span><span className="kbd">⇧</span><span className="kbd">B</span>
+                    </div>
+                    <div className="kbd-row">
+                      <span>Can't drag? <button type="button" className="linkbtn" onClick={() => copy('code', code)}>{copied === 'code' ? 'Copied' : 'Copy the code'}</button> and paste it as a new bookmark's URL.</span>
+                    </div>
+                  </>
+                )}
               </div>
               <DragDemo />
             </div>
