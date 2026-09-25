@@ -14,20 +14,11 @@ After editing any file, click the reload arrow on the extension's card in `chrom
 ## How it ties to Freckle
 
 - **Sign-in** uses the same browser approval as `freckle login`. The extension gets a Freckle CLI token, keeps it in Chrome's local extension storage, and sends it in the `X-Api-Key` header with an `x-org-id` header.
-- **The workflow list** is an ordinary Freckle dataset. The extension looks for a workbook named `Send to Freckle` with a dataset named `Extension workflows` in the chosen org, and offers to create it. Each row is one dropdown option:
-
-  | field | example |
-  |---|---|
-  | `name` | `LinkedIn to phone and email` |
-  | `workbookId` | the workbook holding the target dataset |
-  | `datasetId` | the dataset the page lands in |
-  | `field` | `/linkedin_url` (JSON pointer) |
-  | `pageTypes` | `linkedin_profile, hubspot_record` (blank = any page) |
-
-  Anyone in the org can edit rows from the panel's settings or directly in Freckle. Every signed-in extension picks up changes the next time the panel gains focus.
+- **Workflows are found automatically.** Nothing to set up. A workflow appears in the dropdown when its intake dataset (feeds a workflow, isn't another workflow's output) has a webhook source keyed on a URL field like `/url` or `/linkedin_url`, or a webhook with no key on a dataset that has a URL field. Webhooks keyed on anything else, like an integration's `/reference_id`, are left out. Logic lives in `lib/discover.js`.
+- **The field decides which pages it's offered on.** `/url` takes any page. `linkedin` fields take LinkedIn profiles (or company pages if the name says company). `website` and `domain` fields take websites, and `domain` fields get the bare hostname. `hubspot` and `salesforce` fields take those records.
+- **Hiding** is per person, from the gear icon. Uncheck a workflow to drop it from your own dropdown.
 - **Sending** adds a row to the target dataset through Freckle's API, the same call as `freckle workbook dataset entry create`. No webhook URL is involved. If the dataset's workflow connection is set to **auto**, it runs on every send; if it's **manual**, rows wait. The panel shows which.
 
-Page types: `linkedin_profile`, `linkedin_company`, `hubspot_record`, `salesforce_record`, `website`.
 
 ## Using it
 
@@ -46,6 +37,7 @@ Page types: `linkedin_profile`, `linkedin_company`, `hubspot_record`, `salesforc
 - `background.js` — opens the panel from the icon, handles the shortcut
 - `sidepanel.html` / `sidepanel.js` — the panel UI
 - `lib/freckle.js` — Freckle API client (sign-in, workbooks, datasets, entries)
-- `lib/core.js` — shared send logic, per-page-type defaults, recent sends
+- `lib/discover.js` — finds sendable workflows in the org's workbooks
+- `lib/core.js` — shared send logic, per-page-type defaults, hidden workflows, recent sends
 - `lib/pages.js` — page-type detection, URL cleanup, the Sales Navigator reader
 - `lib/icons.js`, `assets/`, `styles/tokens.css` — Freckle design system assets; the icon is freckle.io's gradient stamp

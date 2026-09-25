@@ -1,6 +1,7 @@
 // State and the send action, shared by the side panel and the keyboard shortcut.
 import * as freckle from './freckle.js';
 import { classify, normalize, isSalesNavLead, extractSalesNavProfile, withArticle } from './pages.js';
+import { intakeDatasets, toTarget, wantsDomain } from './discover.js';
 
 const local = chrome.storage.local;
 
@@ -18,31 +19,52 @@ export async function getCache(orgId) {
   return (await local.get(`cache:${orgId}`))[`cache:${orgId}`] || null;
 }
 
-// Pulls workbooks and the shared workflow list for the org, and caches the result
-// so the keyboard shortcut works without the panel open.
+// Finds every workflow in the org that takes URLs through a webhook, and caches the
+// result so the keyboard shortcut works without the panel open.
 export async function refresh(auth) {
   const workbooks = await freckle.listWorkbooks(auth.token, auth.orgId);
-  const registry = freckle.findRegistry(workbooks);
-  let targets = [];
-  if (registry?.datasetId) {
-    const entries = await freckle.listEntries(auth.token, auth.orgId, registry.workbookId, registry.datasetId);
-    targets = freckle.toTargets(entries, workbooks);
-  }
-  const cache = { registry, targets, workbooks: slimWorkbooks(workbooks), fetchedAt: Date.now() };
+  const intakes = intakeDatasets(workbooks);
+  const perWorkbook = {};
+  const found = await pool(intakes, 6, async (i) => {
+    const sources = await freckle.listDatasetSources(auth.token, auth.orgId, i.workbook.id, i.dataset.id);
+    return { i, sources };
+  });
+  const hooked = found.filter(({ sources }) => sources.some((x) => x.kind === 'webhook'));
+  for (const { i } of hooked) perWorkbook[i.workbook.id] = (perWorkbook[i.workbook.id] || 0) + 1;
+  const targets = hooked
+    .map(({ i, sources }) => toTarget(i, sources, perWorkbook[i.workbook.id]))
+    .filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const cache = { targets, fetchedAt: Date.now() };
   await local.set({ [`cache:${auth.orgId}`]: cache });
   return cache;
 }
 
-function slimWorkbooks(workbooks) {
-  return workbooks.map((w) => ({
-    id: w.id, label: w.label, url: w.url,
-    datasets: (w.datasets || []).filter((d) => !d.archivedAt).map((d) => ({ id: d.id, label: d.label, fieldPaths: d.fieldPaths || [] })),
-    connections: (w.connections || []).map((c) => ({ inputDatasetId: c.inputDatasetId, triggerPolicy: c.triggerPolicy, workflowId: c.workflowId })),
-  }));
+async function pool(items, size, fn) {
+  const out = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const idx = next++;
+      try { out[idx] = await fn(items[idx]); } catch (e) { if (e.status === 401) throw e; out[idx] = null; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(size, items.length) }, worker));
+  return out.filter(Boolean);
 }
 
-export function targetsFor(targets, pageType) {
-  return targets.filter((t) => !t.broken && (t.pageTypes.length === 0 || t.pageTypes.includes(pageType)));
+// Per person: workflows they've hidden from their own dropdown.
+export async function getHidden(orgId) {
+  return (await local.get(`hidden:${orgId}`))[`hidden:${orgId}`] || [];
+}
+export async function setHidden(orgId, id, hide) {
+  const h = new Set(await getHidden(orgId));
+  if (hide) h.add(id); else h.delete(id);
+  await local.set({ [`hidden:${orgId}`]: [...h] });
+}
+
+export function targetsFor(targets, pageType, hidden = []) {
+  return targets.filter((t) => !hidden.includes(t.id) && (t.pageTypes.length === 0 || t.pageTypes.includes(pageType)));
 }
 
 export async function getDefaults(orgId) {
@@ -90,15 +112,15 @@ export async function send(tab, targetId) {
 
   let cache = await getCache(auth.orgId);
   if (!cache) cache = await refresh(auth);
-  const applicable = targetsFor(cache.targets, page.pageType);
+  const applicable = targetsFor(cache.targets, page.pageType, await getHidden(auth.orgId));
   const target = targetId
     ? cache.targets.find((t) => t.id === targetId)
     : pickDefault(applicable, await getDefaults(auth.orgId), page.pageType);
-  if (!target) return { ok: false, pageType: page.pageType, error: `No workflow takes ${withArticle(page.pageType)} yet. Add one in the side panel.` };
+  if (!target) return { ok: false, pageType: page.pageType, error: `No workflow takes ${withArticle(page.pageType)} yet.` };
 
   const item = { at: Date.now(), url: page.url, title: tab.title || '', pageType: page.pageType, targetId: target.id, targetName: target.name, workbookUrl: target.workbookUrl };
   try {
-    const entry = await freckle.createEntry(auth.token, auth.orgId, target.workbookId, target.datasetId, freckle.valueForPointer(target.field, page.url));
+    const entry = await freckle.createEntry(auth.token, auth.orgId, target.workbookId, target.datasetId, freckle.valueForPointer(target.field, wantsDomain(target.field) ? new URL(page.url).hostname.replace(/^www\./, '') : page.url));
     await setDefault(auth.orgId, page.pageType, target.id);
     await pushHistory({ ...item, ok: true, entryId: entry.id });
     return { ok: true, target, url: page.url, pageType: page.pageType, entry };

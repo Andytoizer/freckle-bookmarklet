@@ -46,12 +46,21 @@ Build the minimum:
 1. A webhook-triggered workflow that stores each url as a row in a table.
 2. A Jev decision node that classifies the url into a column called type: linkedin_profile (linkedin.com/in/...), linkedin_company (linkedin.com/company/...), salesforce_record (a Salesforce record URL), hubspot_record (a HubSpot record URL), or company_website (anything else). Branch on that type with a Switch node.
 
-Don't add enrichment yet. I'll add a branch per type next.
+Don't add enrichment yet. I'll add a branch per type next. If you write any Code node, note Freckle Code nodes have no URL global; use string matching.
 
 Test it end to end with one real URL before you report back, then remove the test row.
 
 When it's built, copy the webhook URL to my clipboard (pbcopy on macOS) and give me this link to click, with the webhook URL filled in:
 ${RETURN_URL}`;
+
+// Appended to every copied play. Each line is a failure an agent actually hit while building these.
+export const PLAY_RULES = `Build rules:
+- Optional lookups (phone, mobile, email verification, posts) must never block the branch. If a provider fails or returns nothing, leave that field blank and let the run complete.
+- If a provider node fails twice, swap in a different provider for the same job rather than retrying again.
+- Freckle Code nodes have no URL global. Parse URLs with string matching, or let Jev extract what you need.
+- Only write CRM fields that were empty in a read taken right before the write. Never overwrite a value.
+- Reuse an enrichment chain that already exists in this org when it fits.
+- Tell me the estimated credits per URL for this branch.`;
 
 export interface Play {
   id: string;

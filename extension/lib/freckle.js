@@ -4,11 +4,6 @@
 export const API_BASE = 'https://next-api.freckle.io';
 export const APP_BASE = 'https://next.freckle.io';
 
-// The shared workflow list lives in each org as an ordinary Freckle dataset,
-// so workflow creators can edit it here or in Freckle's own table view.
-export const REGISTRY_WORKBOOK = 'Send to Freckle';
-export const REGISTRY_DATASET = 'Extension workflows';
-
 export class FreckleError extends Error {
   constructor(message, status, body) {
     super(message);
@@ -93,30 +88,9 @@ export async function listWorkbooks(token, orgId) {
   return all.filter((w) => !w.archivedAt);
 }
 
-export async function createWorkbook(token, orgId, label, description) {
-  const data = await request('/v2/workbooks', { token, orgId, method: 'POST', body: { label, description } });
-  return data.workbook;
-}
-
-export async function createDataset(token, orgId, workbookId, label, description) {
-  const data = await request(`/v2/workbooks/${workbookId}/datasets`, {
-    token, orgId, method: 'POST', body: { label, description },
-  });
-  return data.dataset;
-}
-
-export async function listEntries(token, orgId, workbookId, datasetId) {
-  const all = [];
-  let cursor;
-  for (let page = 0; page < 10; page++) {
-    const data = await request(`/v2/datasets/${datasetId}/entries`, {
-      token, orgId, query: { workbookId, limit: 1000, cursor },
-    });
-    all.push(...(data.entries || []));
-    if (!data.nextCursor) break;
-    cursor = data.nextCursor;
-  }
-  return all.filter((e) => !e.deletionRequestedAt);
+export async function listDatasetSources(token, orgId, workbookId, datasetId) {
+  const data = await request(`/v2/datasets/${datasetId}/sources`, { token, orgId, query: { workbookId } });
+  return data.sources || [];
 }
 
 export async function createEntry(token, orgId, workbookId, datasetId, value) {
@@ -124,68 +98,6 @@ export async function createEntry(token, orgId, workbookId, datasetId, value) {
     token, orgId, method: 'POST', query: { workbookId }, body: { value },
   });
   return data.entry;
-}
-
-export async function updateEntry(token, orgId, workbookId, datasetId, entryId, value) {
-  const data = await request(`/v2/datasets/${datasetId}/entries/${entryId}`, {
-    token, orgId, method: 'PATCH', query: { workbookId }, body: { value },
-  });
-  return data.entry;
-}
-
-export async function deleteEntries(token, orgId, workbookId, datasetId, entryIds) {
-  return request(`/v2/datasets/${datasetId}/entries/delete`, {
-    token, orgId, method: 'POST', query: { workbookId }, body: { entryIds },
-  });
-}
-
-// ── The shared workflow list ───────────────────────────────────────────────
-
-export function findRegistry(workbooks) {
-  const wb = workbooks.find((w) => w.label === REGISTRY_WORKBOOK);
-  if (!wb) return null;
-  const ds = (wb.datasets || []).find((d) => d.label === REGISTRY_DATASET && !d.archivedAt);
-  return ds ? { workbookId: wb.id, datasetId: ds.id, url: wb.url } : { workbookId: wb.id, datasetId: null, url: wb.url };
-}
-
-export async function ensureRegistry(token, orgId, workbooks) {
-  const found = findRegistry(workbooks);
-  if (found?.datasetId) return found;
-  const workbookId = found?.workbookId
-    || (await createWorkbook(token, orgId, REGISTRY_WORKBOOK,
-      'Workflows the Send to Freckle Chrome extension can send pages to. One row per workflow.')).id;
-  const ds = await createDataset(token, orgId, workbookId, REGISTRY_DATASET,
-    'name, workbookId, datasetId, field (JSON pointer), pageTypes (comma separated; blank = any page).');
-  return { workbookId, datasetId: ds.id, url: null };
-}
-
-// Turns registry rows into send targets. Rows that don't point at a live dataset are marked broken.
-export function toTargets(entries, workbooks) {
-  const byDataset = new Map();
-  for (const w of workbooks) for (const d of w.datasets || []) byDataset.set(d.id, { workbook: w, dataset: d });
-  return entries.map((e) => {
-    const v = e.value || {};
-    const hit = byDataset.get(v.datasetId);
-    const conn = hit ? (hit.workbook.connections || []).find((c) => c.inputDatasetId === v.datasetId) : null;
-    return {
-      id: e.id,
-      name: String(v.name || 'Untitled workflow'),
-      workbookId: v.workbookId,
-      datasetId: v.datasetId,
-      field: normalizePointer(v.field || '/url'),
-      pageTypes: parsePageTypes(v.pageTypes),
-      workbookLabel: hit?.workbook.label || null,
-      datasetLabel: hit?.dataset.label || null,
-      workbookUrl: hit?.workbook.url || null,
-      trigger: conn ? conn.triggerPolicy : null,
-      broken: !hit || !!hit.dataset.archivedAt,
-    };
-  }).sort((a, b) => a.name.localeCompare(b.name));
-}
-
-export function parsePageTypes(v) {
-  if (Array.isArray(v)) return v.map(String).map((s) => s.trim()).filter(Boolean);
-  return String(v || '').split(',').map((s) => s.trim()).filter(Boolean);
 }
 
 export function normalizePointer(p) {

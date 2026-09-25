@@ -19,7 +19,7 @@ const S = {
   result: null,
   refreshing: false,
   error: null,
-  form: null,             // add/edit workflow form state
+  hidden: [],             // workflow ids this person unchecked
   shortcut: '',
 };
 
@@ -104,6 +104,7 @@ async function boot() {
   if (!S.auth.orgId) { S.view = 'org'; return render(); }
   S.cache = await core.getCache(S.auth.orgId);
   S.defaults = await core.getDefaults(S.auth.orgId);
+  S.hidden = await core.getHidden(S.auth.orgId);
   await loadTab();
   S.view = 'main';
   render();
@@ -225,21 +226,20 @@ function sendBlock() {
   const url = S.tab?.url;
   const type = url && classify(url);
   if (!type) return '';
-  const reg = S.cache?.registry;
-  if (!S.cache) return `<div class="waiting">${icon('circle-dashed', 16, 'spin')} Loading workflows…</div>`;
-  if (!reg?.datasetId) {
+  if (!S.cache) return `<div class="waiting">${icon('circle-dashed', 16, 'spin')} Finding workflows…</div>`;
+  const visible = S.cache.targets.filter((t) => !S.hidden.includes(t.id));
+  if (!visible.length) {
     return `<div class="callout">
-      <h3>No workflows set up for ${esc(orgName())} yet</h3>
-      <p>Freckle keeps this list as a dataset in a workbook called “${esc(freckle.REGISTRY_WORKBOOK)}”, so anyone in the organization can add to it here or in Freckle.</p>
-      <div><button class="btn btn-primary" data-action="create-registry">Create the list</button></div>
+      <h3>No workflows take URLs in ${esc(orgName())} yet</h3>
+      <p>A workflow shows up here on its own once its workbook takes URLs through a webhook. Your coding agent can build one in a few minutes.</p>
+      <div><button class="btn btn-primary" data-action="build">Build one with your coding agent ${icon('arrow-up-right', 12)}</button></div>
     </div>`;
   }
-  const applicable = core.targetsFor(S.cache.targets, type);
+  const applicable = core.targetsFor(S.cache.targets, type, S.hidden);
   if (!applicable.length) {
     return `<div class="callout">
       <h3>No workflow takes ${esc(withArticle(type))} yet</h3>
-      <p>Add one and it shows up here for everyone in ${esc(orgName())}.</p>
-      <div><button class="btn" data-action="add-workflow" data-type="${type}">${icon('plus', 16)} Add workflow</button></div>
+      <p>Workflows that take ${esc(withArticle(type))} show up here on their own.</p>
     </div>`;
   }
   const sel = core.pickDefault(applicable, S.defaults, type);
@@ -289,31 +289,27 @@ function viewMain() {
 
 function viewSettings() {
   const targets = S.cache?.targets || [];
-  const reg = S.cache?.registry;
   const orgs = [...(S.auth?.orgs || [])].sort((a, b) => a.name.localeCompare(b.name));
-  return `${header({ title: 'Workflows', back: 'back-main' })}
+  const pages = (t) => (t.pageTypes.length ? t.pageTypes.map((p) => PAGE_TYPES[p].label).join(', ') : 'Any page');
+  return `${header({ title: 'Settings', back: 'back-main' })}
   <main class="main fade-in">
     <section>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6)">
-        <span class="section-label">In ${esc(orgName())}</span>
-        ${reg?.datasetId ? `<button class="btn" data-action="add-workflow">${icon('plus', 16)} Add</button>` : ''}
+        <span class="section-label">Workflows in ${esc(orgName())}</span>
+        <button class="linkbtn" data-action="refresh">Refresh</button>
       </div>
-      ${!reg?.datasetId
-        ? `<div class="callout"><p>No list yet for this organization.</p><div><button class="btn btn-primary" data-action="create-registry">Create the list</button></div></div>`
-        : targets.length
-          ? `<div class="list">${targets.map((t) => `
-            <div class="row">
-              <div class="grow">
-                <div class="line1" style="font-weight:var(--weight-medium)">${esc(t.name)}${t.broken ? ' <span style="color:var(--danger);font-weight:var(--weight-regular)">· dataset missing</span>' : ''}</div>
-                <div class="line2"><span class="chips" style="display:inline-flex;vertical-align:-2px;margin-right:var(--space-4)">${(t.pageTypes.length ? t.pageTypes : ['website']).filter((p) => PAGE_TYPES[p]).map((p) => marksFor(p, null, true)).join('')}</span>${esc(t.pageTypes.length ? t.pageTypes.map((p) => PAGE_TYPES[p]?.label || p).join(', ') : 'Any page')} → ${esc(t.datasetLabel || 'unknown dataset')}</div>
-              </div>
-              <div class="row-actions">
-                <button class="icon-btn" data-action="edit-workflow" data-id="${esc(t.id)}" aria-label="Edit ${esc(t.name)}">${icon('pencil', 12)}</button>
-                <button class="icon-btn" data-action="delete-workflow" data-id="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">${icon('trash', 12)}</button>
-              </div>
-            </div>`).join('')}</div>`
-          : `<div class="empty-note">No workflows yet. Add the first one.</div>`}
-      ${reg?.url ? `<p class="hint">Anyone in ${esc(orgName())} can also edit this list in Freckle: <a href="${esc(reg.url)}" target="_blank">${esc(freckle.REGISTRY_WORKBOOK)} workbook</a>.</p>` : ''}
+      ${targets.length
+        ? `<div class="list">${targets.map((t) => `
+          <label class="row check" style="cursor:pointer">
+            <div class="grow">
+              <div class="line1" style="font-weight:var(--weight-medium)">${esc(t.name)}</div>
+              <div class="line2">${esc(pages(t))} · ${t.trigger === 'auto' ? 'runs automatically' : 'waits for a manual run'}</div>
+            </div>
+            <input type="checkbox" name="show" value="${esc(t.id)}" ${S.hidden.includes(t.id) ? '' : 'checked'}>
+            <span class="box">${icon('check', 12)}</span>
+          </label>`).join('')}</div>
+          <p class="hint">Found automatically: every workflow whose workbook takes URLs through a webhook. Uncheck any you don't want in your dropdown.</p>`
+        : `<div class="empty-note">None yet. A workflow shows up here on its own once its workbook takes URLs through a webhook.</div>`}
     </section>
 
     <section>
@@ -341,84 +337,9 @@ function viewSettings() {
   <footer class="foot"><div class="line">Signed in to Freckle. <button class="linkbtn" data-action="signout">Sign out</button></div></footer>`;
 }
 
-function guessField(paths) {
-  const prefs = [/linkedin.*url/i, /profile.*url/i, /(^|\/)url$/i, /website|domain/i, /url/i];
-  for (const re of prefs) { const p = paths.find((x) => re.test(x)); if (p) return p; }
-  return paths[0] || '/url';
-}
-
-function viewForm() {
-  const f = S.form;
-  const workbooks = (S.cache?.workbooks || []).filter((w) => w.label !== freckle.REGISTRY_WORKBOOK).sort((a, b) => a.label.localeCompare(b.label));
-  const wb = workbooks.find((w) => w.id === f.workbookId);
-  const datasets = wb?.datasets || [];
-  const ds = datasets.find((d) => d.id === f.datasetId);
-  const paths = ds?.fieldPaths || [];
-  const conn = wb?.connections.find((c) => c.inputDatasetId === f.datasetId);
-  const custom = f.fieldMode === 'custom' || (ds && !paths.length);
-  const canSave = f.name.trim() && f.workbookId && f.datasetId && f.field.trim() && !f.saving;
-  return `${header({ title: f.id ? 'Edit workflow' : 'Add workflow', back: 'back-settings' })}
-  <main class="main fade-in">
-    <form class="form" id="wf-form" autocomplete="off">
-      <div>
-        <label class="label" for="f-name">Name</label>
-        <input id="f-name" class="field" value="${esc(f.name)}" placeholder="LinkedIn to phone and email" maxlength="80">
-        <p class="hint">What reps see in the dropdown.</p>
-      </div>
-      <div>
-        <label class="label" for="f-wb">Workbook</label>
-        <div class="select-wrap"><select id="f-wb" class="select">
-          <option value="">Choose a workbook</option>
-          ${workbooks.map((w) => `<option value="${esc(w.id)}" ${w.id === f.workbookId ? 'selected' : ''}>${esc(w.label)}</option>`).join('')}
-        </select><span class="chev">${icon('chevron-down', 12)}</span></div>
-      </div>
-      <div>
-        <label class="label" for="f-ds">Dataset the page lands in</label>
-        <div class="select-wrap"><select id="f-ds" class="select" ${wb ? '' : 'disabled'}>
-          <option value="">${wb ? 'Choose a dataset' : 'Choose a workbook first'}</option>
-          ${datasets.map((d) => `<option value="${esc(d.id)}" ${d.id === f.datasetId ? 'selected' : ''}>${esc(d.label)}</option>`).join('')}
-        </select><span class="chev">${icon('chevron-down', 12)}</span></div>
-        ${ds ? `<div class="hint">${conn
-          ? (conn.triggerPolicy === 'auto'
-            ? '<span class="dot dot-live"></span> Its workflow runs automatically on new rows.'
-            : '<span class="dot dot-wait"></span> Its workflow is set to manual, so rows wait until someone runs it. Switch the connection to auto in Freckle to run on every send.')
-          : '<span class="dot dot-none"></span> No workflow reads this dataset yet.'}</div>` : ''}
-      </div>
-      <div>
-        <label class="label" for="f-field">Field that gets the URL</label>
-        ${custom
-          ? `<input id="f-field" class="field mono" value="${esc(f.field)}" placeholder="/linkedin_url">`
-          : ds
-            ? `<div class="select-wrap"><select id="f-field-sel" class="select mono">
-                ${paths.map((p) => `<option value="${esc(p)}" ${p === f.field ? 'selected' : ''}>${esc(p)}</option>`).join('')}
-                <option value="__custom">Other field…</option>
-              </select><span class="chev">${icon('chevron-down', 12)}</span></div>`
-            : `<div class="select-wrap"><select class="select" disabled><option>Choose a dataset first</option></select><span class="chev">${icon('chevron-down', 12)}</span></div>`}
-      </div>
-      <div>
-        <span class="label">Pages it takes</span>
-        <div class="checks">
-          ${Object.entries(PAGE_TYPES).map(([k, v]) => `
-            <label class="check">
-              <input type="checkbox" name="pt" value="${k}" ${f.pageTypes.includes(k) ? 'checked' : ''}>
-              <span class="box">${icon('check', 12)}</span>
-              ${marksFor(k, null, true)} ${esc(v.label)}
-            </label>`).join('')}
-        </div>
-        <p class="hint">Leave all unchecked to offer it on any page.</p>
-      </div>
-      ${f.error ? `<div class="status err">${icon('circle-x-filled', 16)}<div class="body">${esc(f.error)}</div></div>` : ''}
-      <div class="form-actions">
-        <button type="button" class="btn" data-action="back-settings">Cancel</button>
-        <button type="submit" class="btn btn-primary" ${canSave ? '' : 'disabled'}>${f.saving ? 'Saving…' : 'Save for everyone'}</button>
-      </div>
-    </form>
-  </main>`;
-}
-
 let lastView = null;
 function render() {
-  const views = { loading: () => `${header()}<main class="main"><div class="waiting">${icon('circle-dashed', 16, 'spin')} Loading…</div></main>`, signin: viewSignin, org: viewOrg, main: viewMain, settings: viewSettings, form: viewForm };
+  const views = { loading: () => `${header()}<main class="main"><div class="waiting">${icon('circle-dashed', 16, 'spin')} Loading…</div></main>`, signin: viewSignin, org: viewOrg, main: viewMain, settings: viewSettings,  };
   const active = document.activeElement?.id;
   $app.innerHTML = views[S.view]();
   // Animate only when the screen changes, not on every re-render.
@@ -479,59 +400,6 @@ async function doSend() {
   render();
 }
 
-async function createRegistry() {
-  try {
-    S.refreshing = true; render();
-    await freckle.ensureRegistry(S.auth.token, S.auth.orgId, await freckle.listWorkbooks(S.auth.token, S.auth.orgId));
-    await refresh({ quiet: true });
-    openForm();
-  } catch (e) {
-    S.refreshing = false; S.error = e.message; render();
-  }
-}
-
-function openForm(target, pageType) {
-  S.form = target
-    ? { id: target.id, name: target.name, workbookId: target.workbookId, datasetId: target.datasetId, field: target.field, fieldMode: 'pick', pageTypes: [...target.pageTypes], saving: false, error: null }
-    : { id: null, name: '', workbookId: '', datasetId: '', field: '', fieldMode: 'pick', pageTypes: pageType ? [pageType] : [], saving: false, error: null };
-  if (target) {
-    const ds = S.cache.workbooks.find((w) => w.id === target.workbookId)?.datasets.find((d) => d.id === target.datasetId);
-    if (ds && !ds.fieldPaths.includes(target.field)) S.form.fieldMode = 'custom';
-  }
-  S.view = 'form';
-  render();
-}
-
-async function saveForm() {
-  const f = S.form;
-  const reg = S.cache.registry;
-  const value = { name: f.name.trim(), workbookId: f.workbookId, datasetId: f.datasetId, field: freckle.normalizePointer(f.field), pageTypes: f.pageTypes.join(', ') };
-  f.saving = true; f.error = null; render();
-  try {
-    if (f.id) await freckle.updateEntry(S.auth.token, S.auth.orgId, reg.workbookId, reg.datasetId, f.id, value);
-    else await freckle.createEntry(S.auth.token, S.auth.orgId, reg.workbookId, reg.datasetId, value);
-    await refresh({ quiet: true });
-    S.view = 'settings';
-    render();
-  } catch (e) {
-    if (e.status === 401) return expire();
-    f.saving = false; f.error = e.message; render();
-  }
-}
-
-async function deleteWorkflow(id) {
-  const t = S.cache.targets.find((x) => x.id === id);
-  if (!t || !confirm(`Remove “${t.name}” for everyone in ${orgName()}?`)) return;
-  const reg = S.cache.registry;
-  try {
-    await freckle.deleteEntries(S.auth.token, S.auth.orgId, reg.workbookId, reg.datasetId, [id]);
-    await refresh({ quiet: true });
-  } catch (e) {
-    if (e.status === 401) return expire();
-    S.error = e.message; render();
-  }
-}
-
 $app.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el) return;
@@ -542,13 +410,9 @@ $app.addEventListener('click', (e) => {
   else if (a === 'grant') grant();
   else if (a === 'send') doSend();
   else if (a === 'refresh') refresh();
-  else if (a === 'create-registry') createRegistry();
   else if (a === 'open-settings') { S.view = 'settings'; render(); }
   else if (a === 'back-main') { S.view = 'main'; render(); }
-  else if (a === 'back-settings') { S.view = S.cache?.targets?.length || S.form?.id ? 'settings' : 'main'; S.form = null; render(); }
-  else if (a === 'add-workflow') openForm(null, el.dataset.type);
-  else if (a === 'edit-workflow') openForm(S.cache.targets.find((t) => t.id === el.dataset.id));
-  else if (a === 'delete-workflow') deleteWorkflow(el.dataset.id);
+  else if (a === 'build') chrome.tabs.create({ url: 'https://freckle-bookmarklet.vercel.app' });
   else if (a === 'shortcuts') chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
   else if (a === 'signout') { core.signOut().then(() => { S.auth = null; S.cache = null; S.view = 'signin'; S.signin = null; render(); }); }
 });
@@ -562,35 +426,11 @@ $app.addEventListener('change', async (e) => {
     S.defaults = await core.getDefaults(S.auth.orgId);
     S.result = null;
     render();
-  } else if (S.view === 'form') {
-    const f = S.form;
-    if (t.id === 'f-wb') { f.workbookId = t.value; f.datasetId = ''; f.field = ''; f.fieldMode = 'pick'; }
-    else if (t.id === 'f-ds') {
-      f.datasetId = t.value; f.fieldMode = 'pick';
-      const ds = S.cache.workbooks.find((w) => w.id === f.workbookId)?.datasets.find((d) => d.id === t.value);
-      f.field = ds ? guessField(ds.fieldPaths) : '';
-      if (ds && !ds.fieldPaths.length) f.fieldMode = 'custom';
-    } else if (t.id === 'f-field-sel') {
-      if (t.value === '__custom') { f.fieldMode = 'custom'; f.field = ''; } else f.field = t.value;
-    } else if (t.name === 'pt') {
-      f.pageTypes = [...document.querySelectorAll('input[name="pt"]:checked')].map((x) => x.value);
-    }
-    render();
-    if (t.value === '__custom') document.getElementById('f-field')?.focus();
+  } else if (t.name === 'show') {
+    await core.setHidden(S.auth.orgId, t.value, !t.checked);
+    S.hidden = await core.getHidden(S.auth.orgId);
   }
 });
-
-$app.addEventListener('input', (e) => {
-  if (S.view !== 'form') return;
-  if (e.target.id === 'f-name') S.form.name = e.target.value;
-  else if (e.target.id === 'f-field') S.form.field = e.target.value;
-  else return;
-  const f = S.form;
-  const btn = document.querySelector('#wf-form button[type="submit"]');
-  if (btn) btn.disabled = !(f.name.trim() && f.workbookId && f.datasetId && f.field.trim());
-});
-
-$app.addEventListener('submit', (e) => { e.preventDefault(); saveForm(); });
 
 // ── Keep up with the browser ───────────────────────────────────────────────
 

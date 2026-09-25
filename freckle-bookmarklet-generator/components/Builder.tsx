@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
 import { buildBookmarklet, normalizeWebhook } from '../bookmarklet';
-import { AGENTS, PLAYS, SETUP_PROMPT, type Agent } from '../prompts';
+import { AGENTS, PLAYS, PLAY_RULES, SETUP_PROMPT, type Agent } from '../prompts';
 
 const WEBHOOK_RE = /^https:\/\/next-api\.freckle\.io\/v2\/dataset-webhooks\/[^/\s]+\/[^/\s]+$/i;
 
@@ -129,7 +129,7 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
 
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
   // Copied plays end with where they go and the webhook, so the prompt works even in a brand-new agent session.
-  const playPrompt = (p: { prompt: string; where: string }) => `${p.prompt}\n\n${p.where} in the Freckle workbook "Freckle bookmark", the workflow whose webhook URL is ${webhook || '<your webhook URL>'}. Before you tell me it's done, send one real URL of that type through the webhook, run it end to end, and confirm the run completes and the row has the new fields filled in. If it fails, fix it and rerun.`;
+  const playPrompt = (p: { prompt: string; where: string }) => `${p.prompt}\n\n${p.where} in the Freckle workbook "Freckle bookmark", the workflow whose webhook URL is ${webhook || '<your webhook URL>'}.\n\n${PLAY_RULES}\n\nBefore you tell me it's done, send one real URL of that type through the webhook, run it end to end, and confirm the run completes and the row has the new fields filled in. If it fails, fix it and rerun. Remove any test rows you created.`;
 
   return (
     <section className="section" ref={sectionRef} id="setup">
