@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../ds/Icon';
 import { buildBookmarklet, normalizeWebhook } from '../bookmarklet';
-import { AGENTS, DEFAULT_NAME, PLAYS, RULES_URL, SETUP_PROMPT, WEBHOOK_RE, type Agent } from '../prompts';
+import { AGENTS, DEFAULT_NAME, PLAYS, SETUP_PROMPT, WEBHOOK_RE, type Agent } from '../prompts';
 import DragStep from './DragStep';
 import ShareModal from './ShareModal';
 
@@ -115,7 +115,9 @@ const Builder: React.FC<BuilderProps> = ({ initial }) => {
 
   const short = webhook.replace('https://next-api.freckle.io/v2/dataset-webhooks/', '…/').replace(/\/[^/]+$/, '/…');
   // Copied plays end with where they go and the webhook, so the prompt works even in a brand-new agent session.
-  const playPrompt = (p: { prompt: string; where: string }) => `${p.prompt}\n\n${p.where} in the Freckle workbook "Freckle bookmark", the workflow whose webhook URL is ${webhook || '<your webhook URL>'}. Read and follow ${RULES_URL} before you start and before you report back.`;
+  const playPrompt = (p: { prompt: string; where: string }) => `${p.prompt}
+
+Use the /freckle skill. ${p.where} in the Freckle workbook "Freckle bookmark", the workflow whose webhook URL is ${webhook || '<your webhook URL>'}.`;
 
   return (
     <section className="section" ref={sectionRef} id="setup">
