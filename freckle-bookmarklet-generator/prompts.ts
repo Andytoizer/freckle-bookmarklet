@@ -38,7 +38,7 @@ export const AGENTS: Record<Agent, AgentDef> = {
   },
 };
 
-export const SETUP_PROMPT = `Use Freckle to build a workflow that starts from a webhook.
+export const SETUP_PROMPT = `Use Freckle to build a workflow that starts from a webhook. Name the workbook "Freckle bookmark".
 
 Each event is one page I send from my browser with the "Send to Freckle" bookmarklet. It has a single field: url.
 

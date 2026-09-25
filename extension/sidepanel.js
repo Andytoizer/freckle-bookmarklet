@@ -119,12 +119,14 @@ function header({ title, back } = {}) {
       <span class="title">${esc(title)}</span>
     </header>`;
   }
-  const signedIn = S.auth?.orgId;
+  // Chrome's side panel already shows the extension's icon and name above this,
+  // so the header carries the organization instead of repeating the title.
+  if (!S.auth?.orgId) return '';
   return `<header class="bar">
-    <img class="stamp" src="assets/logos/stamp_black_full.svg" alt="">
-    <span class="title">Send to Freckle${signedIn ? ` <span class="muted" style="font-weight:var(--weight-regular)">· ${esc(orgName())}</span>` : ''}</span>
+    <span class="section-label">Org</span>
+    <span class="title">${esc(orgName())}</span>
     ${S.refreshing ? `<span class="subtle" title="Refreshing">${icon('circle-dashed', 12, 'spin')}</span>` : ''}
-    ${signedIn ? `<button class="icon-btn" data-action="open-settings" title="Workflows and settings" aria-label="Workflows and settings">${icon('settings', 16)}</button>` : ''}
+    <button class="icon-btn" data-action="open-settings" title="Workflows and settings" aria-label="Workflows and settings">${icon('settings', 16)}</button>
   </header>`;
 }
 
@@ -143,6 +145,7 @@ function viewSignin() {
       </div>`;
   } else {
     body = `
+      <img src="assets/logos/stamp_gradient.png" alt="" width="40" height="40" style="border-radius:var(--radius-md)">
       <h1>Send any page to a Freckle workflow</h1>
       <p>Sign in to see the workflows your organization has set up. Pick one, and every LinkedIn profile, CRM record or company site you open is one click from a new row.</p>
       ${st?.state === 'error' ? `<div class="status err">${icon('circle-x-filled', 16)}<div class="body">${esc(st.error)}</div></div>` : ''}
