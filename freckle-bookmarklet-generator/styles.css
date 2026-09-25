@@ -242,12 +242,13 @@ strong { font-weight: var(--weight-medium); color: var(--gray-9); }
 .modal-hint { font-size: var(--text-xs); line-height: 16px; color: var(--gray-5); }
 .modal-hint.warn { display: flex; align-items: flex-start; gap: 6px; color: var(--gray-6); }
 .modal-hint.warn svg { flex-shrink: 0; margin-top: 2px; color: var(--warning, #b7791f); }
+.modal > .input { flex: none; width: 100%; }
 .input.sans { font-family: var(--font-sans); font-size: var(--text-sm); letter-spacing: normal; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* Install (teammate) page */
 .install-hero .eyebrow { display: block; margin-bottom: 12px; }
-.install-body { padding-top: 0; }
+.install-body { padding-top: 36px; }
 .install-done { display: flex; gap: 16px; align-items: flex-start; padding: 20px 24px; border: 1px solid var(--green-2); border-radius: var(--radius-md); background: var(--success-tint); max-width: 720px; }
 .install-done .done-mark { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--success); color: #fff; flex-shrink: 0; }
 .install-done h3 { margin: 0 0 4px; }
